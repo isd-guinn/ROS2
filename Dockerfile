@@ -4,32 +4,46 @@ FROM osrf/ros:humble-desktop-full
 # - rviz2
 # - python 3
 
-# Update and upgrade existing packages
-RUN apt-get update && apt-get upgrade -y
+WORKDIR /
 
+# Update and upgrade existing packages
+RUN apt-get update
+RUN apt-get upgrade -y
 # Install necessary packages
-RUN apt-get update && apt-get install -y \
+RUN apt-get install -y \
     sudo \
+    nano \
     curl \
     git \
-    code \
     x11-apps \
     ros-dev-tools \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-ros-gz
 
-ENV SHELL /bin/bash
-# ENV LANG en_US.UTF-8
-
-RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-RUN source ~/.bashrc
+# SHELL ["/bin/bash", "-c"]
+# # ENV LANG=en_US.UTF-8
 
 # Create workspace directory
-RUN mkdir -p /ws/src
-COPY /src /ws/src
+RUN mkdir -p ~/ros2_ws/src
+WORKDIR /ros2_ws
+# Clone source code into workspace
+COPY /src /ros2_ws/src
+# Build workspace
+RUN colcon build --symlink-install
+# RUN source install/setup.bash # to be tested whether it works or not
 
-# Set the working directory
-WORKDIR /ws
+# setup colcon_cd
+WORKDIR /
+RUN echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
+RUN echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
 
-CMD ["/bin/bash"]
+# other setup
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc
+
+# source the bashrc
+RUN bash -c "source ~/.bashrc"
+
+# Change to the working directory
+WORKDIR /ros2_ws
