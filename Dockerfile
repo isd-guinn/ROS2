@@ -12,24 +12,27 @@ RUN apt-get update && apt-get install -y \
     sudo \
     curl \
     git \
-    code \
     x11-apps \
     ros-dev-tools \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-ros-gz
 
-ENV SHELL /bin/bash
-# ENV LANG en_US.UTF-8
+# Install VSCode
 
+ENV SHELL=/bin/bash
+# ENV LANG=en_US.UTF-8
+# -------------------------------------------------------
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-RUN source ~/.bashrc
-
 # Create workspace directory
-RUN mkdir -p /ws/src
-COPY /src /ws/src
+RUN mkdir -p /catkin_ws/src
+# Clone source code into workspace
+COPY /src /catkin_ws/src
+# Build workspace
+RUN /bin/bash -c '. /opt/ros/humble/setup.bash; cd /catkin_ws; catkin_make; cd'
+RUN echo "source /catkin_ws/devel/setup.bash" >> ~/.bashrc
+RUN echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc
+RUN source /.bashrc
 
 # Set the working directory
-WORKDIR /ws
-
-CMD ["/bin/bash"]
+WORKDIR /catkin_ws
