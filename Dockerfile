@@ -21,9 +21,6 @@ RUN apt-get install -y \
     ros-humble-nav2-bringup \
     ros-humble-ros-gz
 
-# SHELL ["/bin/bash", "-c"]
-# # ENV LANG=en_US.UTF-8
-
 # Create workspace directory
 RUN mkdir -p ~/ros2_ws/src
 WORKDIR /ros2_ws
