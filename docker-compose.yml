@@ -1,0 +1,13 @@
+# demo: creating a ROS2 network with two nodes
+
+# version: '2'
+
+# services:
+#   talker:
+#     image: osrf/ros:foxy-desktop
+#     command: ros2 run demo_nodes_cpp talker
+#   listener:
+#     image: osrf/ros:foxy-desktop
+#     command: ros2 run demo_nodes_cpp listener
+#     depends_on:
+#       - talker
