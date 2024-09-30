@@ -4,14 +4,16 @@ FROM ros:humble-ros-base-jammy
 
 WORKDIR /
 
-# install ros2 packages - so that it's same as humble-desktop-full
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# install ros2 packages - so that it's same as humble-desktop
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
     ros-humble-desktop=0.10.0-1* \
     && rm -rf /var/lib/apt/lists/*
 # Install necessary packages
+RUN apt-get update
 RUN apt-get install -y \
     sudo \
-    nano \
+    # nano \
     curl \
     git \
     x11-apps \

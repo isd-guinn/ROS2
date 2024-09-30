@@ -9,7 +9,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - Open Docker Desktop
 - Change directory to the cloned repo
 - `docker build -t  <image_name> .`
-    > For multi-platform:
+    > For multi-platform build:
     > `docker buildx create --name mybuilder --use`
     > `docker buildx build --platform linux/arm64,windows/amd64 .`
 - Check whether the image is successfully built by `docker images`
@@ -24,7 +24,7 @@ Below steps needs to be done before running the docker.
 - `xhost local:root` (to enable X11 server)
 
 ### Exit the Docker
-Exit by `exit` or Ctrl+D in the terminal.
+Exit by typing `exit` in the docker terminal.
 
 ## Remarks
 [Docker CLI Cheat Sheet](https://docs.docker.com/get-started/docker_cheatsheet.pdf)
@@ -33,4 +33,4 @@ Rasberry Pi 5's env:
 - Ubuntu 24.04
 - ROS2 Jazzy
 
-reference: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
+reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
