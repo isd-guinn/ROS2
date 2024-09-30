@@ -11,16 +11,38 @@ RUN apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 # Install necessary packages
 RUN apt-get update
+RUN apt-get upgrade -y
 RUN apt-get install -y \
     sudo \
-    # nano \
+    nano \
     curl \
     git \
     x11-apps \
     ros-dev-tools \
+    # Install Nav2 dependencies
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
-    ros-humble-ros-gz
+    # Install Turtlebot3 dependencies
+    ros-humble-cartographer \
+    ros-humble-cartographer-ros \
+    ros-humble-dynamixel-sdk \
+    ros-humble-turtlebot3-msgs \
+    ros-humble-turtlebot3 \
+    ros-humble-turtlebot4-desktop \
+    ros-humble-turtlebot4-simulator
+
+# install (ignition) gazebo fortress
+# reference: https://gazebosim.org/docs/fortress/install_ubuntu/
+RUN sudo apt-get install -y lsb-release gnupg
+RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+RUN sudo apt-get update
+RUN sudo apt-get install -y ignition-fortress
+
+# install dependencies for nav2
+RUN sudo apt-get install -y \
+    ros-humble-gazebo-ros \
+    ros-humble-turtlebot3-gazebo
 
 SHELL ["/bin/bash", "-c"]
 
@@ -41,6 +63,12 @@ RUN echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
 # other setup
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc
+RUN echo "export LIBGL_ALWAYS_SOFTWARE=1" >> ~/.bashrc
+
+# for nav2
+RUN echo "source /usr/share/gazebo/setup.bash" >> ~/.bashrc
+RUN echo "export TURTLEBOT3_MODEL=waffle" >> ~/.bashrc
+# RUN echo "export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models" >> ~/.bashrc
 
 # source the bashrc
 RUN bash -c "source ~/.bashrc"
