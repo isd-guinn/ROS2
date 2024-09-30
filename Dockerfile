@@ -1,18 +1,19 @@
-FROM osrf/ros:humble-desktop-full
+FROM ros:humble-ros-base-jammy
+# osrf/ros:humble-desktop-full DOES NOT WORK FOR linux/arm64
 # Ubuntu 22.04 Jammy Jellyfish
-# already installed with base image:
-# - rviz2
-# - python 3
 
 WORKDIR /
 
-# Update and upgrade existing packages
+# install ros2 packages - so that it's same as humble-desktop
 RUN apt-get update
-RUN apt-get upgrade -y
+RUN apt-get install -y --no-install-recommends \
+    ros-humble-desktop=0.10.0-1* \
+    && rm -rf /var/lib/apt/lists/*
 # Install necessary packages
+RUN apt-get update
 RUN apt-get install -y \
     sudo \
-    nano \
+    # nano \
     curl \
     git \
     x11-apps \
@@ -20,6 +21,8 @@ RUN apt-get install -y \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-ros-gz
+
+SHELL ["/bin/bash", "-c"]
 
 # Create workspace directory
 RUN mkdir -p ~/ros2_ws/src
