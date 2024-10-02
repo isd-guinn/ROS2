@@ -19,6 +19,7 @@ RUN apt-get install -y \
     git \
     x11-apps \
     ros-dev-tools \
+    python3-pip \
     # Install Nav2 dependencies
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
