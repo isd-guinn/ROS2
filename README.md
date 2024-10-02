@@ -20,7 +20,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 
 To open a new terminal in the same docker container:
 - `docker ps` to check the container_id
-- `docker exec -it <container_id>`
+- `docker exec -it <container_id> bash`
 
 ### For Rviz2 and Gazebo
 Below steps needs to be done before running the docker.
@@ -29,6 +29,14 @@ Below steps needs to be done before running the docker.
 - Set display number as 0 in XLaunch
 > Linux (to be tested)
 - `xhost local:root` (to enable X11 server)
+
+### For Nav2
+Before running anything using nav2, set key env variables below:
+```
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
+```
+For testing, you can try:
+`ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False`
 
 ### Exit the Docker
 Exit by typing `exit` in the docker terminal.
