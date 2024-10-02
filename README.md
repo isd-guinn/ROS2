@@ -8,13 +8,9 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 ### Run the Docker
 - Open Docker Desktop
 - Change directory to the cloned repo
-- `docker build -t <image_name> .`
-    > For multi-platform build:
-    > `docker buildx create --name mybuilder --use`
-    > `docker buildx build --platform linux/arm64,windows/amd64 .`
-
-    > For linux:
-    > `docker run -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
+- If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
+- `docker buildx build --load --platform linux/amd64 -t <image_name> .`
+    > For linux: `docker run -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
 - Check whether the image is successfully built by `docker images`
 - `docker run -e DISPLAY=host.docker.internal:0.0 -it <image_name>`
 
@@ -47,6 +43,7 @@ Exit by typing `exit` in the docker terminal.
 Rasberry Pi 5's env:
 - Ubuntu 24.04
 - ROS2 Jazzy
+- linux/amd64
 
 Reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
 For tb4: https://turtlebot.github.io/turtlebot4-user-manual/tutorials/navigation.html
