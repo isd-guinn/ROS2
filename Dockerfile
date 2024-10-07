@@ -54,7 +54,6 @@ WORKDIR /ros2_ws
 COPY /src /ros2_ws/src
 # Build workspace
 RUN colcon build --symlink-install
-# RUN source install/setup.bash # to be tested whether it works or not
 
 # setup colcon_cd
 WORKDIR /
@@ -83,7 +82,10 @@ RUN sudo rosdep fix-permissions \
 RUN sudo apt-get update
 RUN rosdep install --from-paths src --ignore-src -r -y
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh
-# RUN colcon build --symlink-install
 
 # Change to the working directory
 WORKDIR /ros2_ws
+
+# Command to run on container start for creating this image
+#
+# RUN colcon build --symlink-install
