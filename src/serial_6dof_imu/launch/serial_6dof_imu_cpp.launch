@@ -1,0 +1,16 @@
+<!-- done porting -->
+<!--
+  Copyright: 2016-2021 https://www.corvin.cn ROS小课堂
+  Description:使用串口来读取6DOF imu模块的数据,并在ros中发布使用话题发布出来.
+  Author: corvin
+  History:
+    20211122: init this file.
+-->
+<launch>
+  <arg name="serial_6dof_imu_cfg" default="$(find serial_6dof_imu)/cfg/param.yaml" />
+  <!-- <node pkg="serial_6dof_imu" type="serial_6dof_imu_node" name="serial_imu_node" output="screen"> -->
+  <node pkg="serial_6dof_imu" exec="serial_6dof_imu_node" name="serial_imu_node" output="screen">
+    <!-- <rosparam file="$(arg serial_6dof_imu_cfg)" command="load" /> -->
+    <param from="$(arg serial_6dof_imu_cfg)" />
+  </node>
+</launch>

@@ -1,0 +1,54 @@
+# done porting
+###########################################################
+# Copyright: 2016-2021 www.corvin.cn ROS小课堂
+# Description:使用串口与IMU模块进行通信时的配置信息,根据需要修改
+# 可以配置的各参数如下(这里需要注意参数名称和参数之间要有空格隔开):
+#  imu_dev:串口设备在linux系统的挂载点,如果使用usb转串口
+#     模块进行通信,都是写ttyUSB0,1,2.
+#  pub_topic_hz:话题发布的数据频率,默认设置为100Hz.
+#  imu_link_name:imu模块的link名,该名称一般在urdf模型中定义.
+#  pub_data_topic:发布imu数据的ROS话题名.
+#  yaw_zero_topic:通过往该话题中发消息即可将yaw角度归零.
+#  yaw_pub_topic:将yaw信息通过该话题发送出来.
+#  pitch_pub_topic:将pitch数据通过该话题发布出来.
+#  roll_pub_topic:将roll数据通过该话题发布出来.
+#  yaw_zero_topic:通过向该话题发布空消息即可将yaw角度归零.
+#  yaw_zero_service:通过向该服务发送空请求即可将yaw归零.
+#  get_yaw_data_srv:可以获取到yaw当前角度的服务.
+# Author: corvin
+# History:
+#   20211122:init this file.
+###########################################################
+
+# imu_dev: /dev/mini_imu
+# pub_topic_hz: 100
+
+# imu_link_name: base_imu_link
+# pub_data_topic: imu_data
+# temp_pub_topic: imu_temp
+# yaw_pub_topic: yaw_data
+# pitch_pub_topic: pitch_data
+# roll_pub_topic: roll_data
+# yaw_zero_topic: yaw_zero_topic
+
+# yaw_zero_service: /serial_imu_service/setYawZero_service
+# get_yaw_data_srv: /serial_imu_service/getYawData_service
+# set_iic_addr_srv: /serial_imu_service/setIICAddr_service
+
+/serial_6dof_imu_node:
+  ros__parameters:
+    imu_dev: /dev/mini_imu
+    pub_topic_hz: 100
+    imu_link_name: base_imu_link
+    pub_data_topic: imu_data
+    temp_pub_topic: imu_temp
+    yaw_pub_topic: yaw_data
+    pitch_pub_topic: pitch_data
+    roll_pub_topic: roll_data
+    yaw_zero_topic: yaw_zero_topic
+    yaw_zero_service: /serial_imu_service/setYawZero_service
+    get_yaw_data_srv: /serial_imu_service/getYawData_service
+    set_iic_addr_srv: /serial_imu_service/setIICAddr_service
+/**:
+  ros__parameters:
+    debug: true
