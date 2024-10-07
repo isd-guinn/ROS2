@@ -10,9 +10,11 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - Change directory to the cloned repo
 - If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
 - `docker buildx build --load --platform linux/amd64 -t <image_name> .`
-    > For linux: `docker run -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
+    > For linux host env: `docker run --privileged -d -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
 - Check whether the image is successfully built by `docker images`
-- `docker run -e DISPLAY=host.docker.internal:0.0 -it <image_name>`
+- `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -d -it <image_name>`
+
+The docker should be able to access to Raspberry Pi GPIO Pins.
 
 To open a new terminal in the same docker container:
 - `docker ps` to check the container_id
@@ -46,4 +48,7 @@ Rasberry Pi 5's env:
 - linux/amd64
 
 Reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
+
 For tb4: https://turtlebot.github.io/turtlebot4-user-manual/tutorials/navigation.html
+
+For RasPi GPIO pins access: https://stackoverflow.com/questions/30059784/docker-access-to-raspberry-pi-gpio-pins
