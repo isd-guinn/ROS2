@@ -74,5 +74,16 @@ RUN echo "export TURTLEBOT3_MODEL=waffle" >> ~/.bashrc
 # source the bashrc
 RUN bash -c "source ~/.bashrc"
 
+# install for ros2_control
+WORKDIR /ros2_ws
+RUN sudo apt-get install -y ros-humble-ros2-control
+RUN vcs import --input https://raw.githubusercontent.com/ros-controls/ros2_control_ci/master/ros_controls.$ROS_DISTRO.repos src
+RUN sudo rosdep fix-permissions \ 
+    && rosdep update --rosdistro=$ROS_DISTRO
+RUN sudo apt-get update
+RUN rosdep install --from-paths src --ignore-src -r -y
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh
+# RUN colcon build --symlink-install
+
 # Change to the working directory
 WORKDIR /ros2_ws
