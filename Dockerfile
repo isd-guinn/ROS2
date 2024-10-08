@@ -50,8 +50,8 @@ SHELL ["/bin/bash", "-c"]
 # Create workspace directory
 RUN mkdir -p ~/ros2_ws/src
 WORKDIR /ros2_ws
-# Clone source code into workspace
-COPY /src /ros2_ws/src
+# # Clone source code into workspace
+# COPY /src /ros2_ws/src
 # Build workspace
 RUN colcon build --symlink-install
 
