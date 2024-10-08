@@ -128,19 +128,18 @@ int main(int argc, char **argv)
     const float acc_factor = 9.806; //重力加速度常量
 
     //launch文件中加载yaml配置文件，然后从yaml配置文件中读取各参数
-    // not yet update
-    ros::param::get("~imu_dev",          imu_dev);
-    ros::param::get("~imu_link_name",    imu_link_name);
-    ros::param::get("~pub_topic_hz",     pub_topic_hz);
-    ros::param::get("~pub_data_topic",   imu_topic_name);
-    ros::param::get("~yaw_zero_topic",   yaw_zero_topic);
-    ros::param::get("~yaw_zero_service", yaw_zero_service);
-    ros::param::get("~yaw_pub_topic",    yaw_pub_topic);
-    ros::param::get("~temp_pub_topic",   temp_pub_topic);
-    ros::param::get("~pitch_pub_topic",  pitch_pub_topic);
-    ros::param::get("~roll_pub_topic",   roll_pub_topic);
-    ros::param::get("~get_yaw_data_srv", yaw_data_service);
-    ros::param::get("~set_iic_addr_srv", set_iic_addr_service);
+    // ros::param::get("~imu_dev",          imu_dev);
+    // ros::param::get("~imu_link_name",    imu_link_name);
+    // ros::param::get("~pub_topic_hz",     pub_topic_hz);
+    // ros::param::get("~pub_data_topic",   imu_topic_name);
+    // ros::param::get("~yaw_zero_topic",   yaw_zero_topic);
+    // ros::param::get("~yaw_zero_service", yaw_zero_service);
+    // ros::param::get("~yaw_pub_topic",    yaw_pub_topic);
+    // ros::param::get("~temp_pub_topic",   temp_pub_topic);
+    // ros::param::get("~pitch_pub_topic",  pitch_pub_topic);
+    // ros::param::get("~roll_pub_topic",   roll_pub_topic);
+    // ros::param::get("~get_yaw_data_srv", yaw_data_service);
+    // ros::param::get("~set_iic_addr_srv", set_iic_addr_service);
 
     // Declare and get parameters
     handle->declare_parameter<std::string>("imu_dev", "/dev/ttyUSB0");
@@ -175,7 +174,7 @@ int main(int argc, char **argv)
     auto setIICSrv = handle->create_service<serial_6dof_imu::srv::setIICAddr>("set_iic_addr_service", setIICAddrService);
 
     // ros::Subscriber yawZeroSub = handle.subscribe(yaw_zero_topic, 1, yawZeroCallback);
-    auto yawZeroSub = handle->create_subscription<std_msgs::msg::Float32>("yaw_zero_topic", 1, yawZeroCallback);
+    auto yawZeroSub = handle->create_subscription<std_msgs::msg::Empty>("yaw_zero_topic", 1, yawZeroCallback);
     // ros::Publisher imu_pub   = handle.advertise<sensor_msgs::Imu>(imu_topic_name, 2);
     // ros::Publisher yaw_pub   = handle.advertise<std_msgs::Float32>(yaw_pub_topic, 2);
     // ros::Publisher pitch_pub = handle.advertise<std_msgs::Float32>(pitch_pub_topic, 2);
@@ -186,7 +185,6 @@ int main(int argc, char **argv)
     auto pitch_pub = handle->create_publisher<std_msgs::msg::Float32>("pitch_pub_topic", 2);
     auto roll_pub = handle->create_publisher<std_msgs::msg::Float32>("roll_pub_topic", 2);
     auto temp_pub = handle->create_publisher<std_msgs::msg::Float32>("temp_pub_topic", 2);
-    // ros::Rate loop_rate(pub_topic_hz);
     rclcpp::Rate loop_rate(pub_topic_hz);
 
     sensor_msgs::msg::Imu imu_msg;

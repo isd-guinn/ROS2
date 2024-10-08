@@ -1,3 +1,5 @@
+# request
 string address
 ---
+# response
 int32 status
