@@ -57,7 +57,8 @@ target_include_directories(serial_6dof_imu_node PUBLIC
 ## Specify libraries to link a library or executable target against
 ## not sure have bug or not
 target_link_libraries(serial_6dof_imu_node PUBLIC
-  rclcpp::rclcpp
+  # rclcpp::rclcpp
+  ${rclcpp_LIBRARIES}
   ${std_msgs_TARGETS}
   ${sensor_msgs_TARGETS}
   ${rosidl_default_generators_TARGETS}
