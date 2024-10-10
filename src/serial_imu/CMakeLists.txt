@@ -1,4 +1,5 @@
 # this is for CH104M serial imu
+# source: Sea Land Technology https://sealandtech.com.tw/resource.html?s=anrot&type=tutorial&p=ros2/readme
 
 cmake_minimum_required(VERSION 3.14.4) # minimum for ROS2 Humble
 # cmake_minimum_required(VERSION 3.5)

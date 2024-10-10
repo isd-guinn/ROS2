@@ -1,0 +1,42 @@
+# for documenting the CLI commands for testing & debug
+FROM <BaseImage>
+
+WORKDIR /ros2_ws
+RUN colcon build --packages-select serial_imu
+RUN bash -c "source /ros2_ws/install/setup.bash"
+## to launch:
+## ros2 launch serial_imu imu_spec_msg.launch.py
+
+imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
+when at rest, 
+fluctuate +-0.01x for linear acc,
++-0.001 for angular velocity
++-0.0002 for orientation 
+
+# may need a step to clear the src folder in the base image
+# WORKDIR /ros2_ws
+# COPY /src /ros2_ws/src
+
+-----------------------------------
+Path for RasPi5 devices:
+IMU = /dev/ttyUSB0
+UART = 
+
+-----------------------------------
+current:
+[?] correct to arm64 (base first) <--
+[] built image
+[] test the IMU-related nodes on RasPi
+
+done: 
+[-] verison management rules of the images
+[-] test GPIO pin expose
+[-] test the usb port of IMU on RasPi
+[-] test display on raspi
+
+optional:
+[] identify the ttyUSB0 for IMU
+# can use `udevadm info --attribute-walk --name=/dev/ttyUSB0` to check detail info
+[] solve the usb port issue of IMU on Win11
+[] test the IMU-related nodes on Win11
+[] kalman filters?? (ros2) robot_localization

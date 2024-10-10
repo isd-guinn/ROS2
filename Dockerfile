@@ -1,32 +1,55 @@
-#ver: newtest:v1
-FROM hinpak/ros2_with_ros2_control:v1
+# for testing imu nodes
 
-# Clone source code into workspace
+FROM arm64v8/ros:humble-ros-base
+
+WORKDIR /
+
+# Install necessary packages
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y \
+    python3-pip \
+    nano
+
+# install ros2 packages - so that it's same as humble-desktop
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+    ros-humble-desktop=0.10.0-1* \
+    && rm -rf /var/lib/apt/lists/*
+    
+# Create workspace directory
+RUN mkdir -p ~/ros2_ws/src
+# # Clone source code into workspace
 WORKDIR /ros2_ws
 COPY /src /ros2_ws/src
-# Build workspace
-RUN apt-get update
-RUN apt-get install -y ament-cmake
-RUN apt-get install -y ros-humble-imu-tools
-# RUN apt-get install -y python3-colcon-common-extensions
-# install dependency
-RUN rosdep install --from-paths src --ignore-src -r -y
-RUN bash -c "source /opt/ros/humble/setup.bash" && \
-    colcon build --symlink-install
 
-# source
+# setup colcon_cd
+WORKDIR /
+RUN echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
+RUN echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
+
+# other setup
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc
+RUN echo "export LIBGL_ALWAYS_SOFTWARE=1" >> ~/.bashrc
+
+# source the bashrc
 RUN bash -c "source ~/.bashrc"
-RUN . /opt/ros/${ROS_DISTRO}/setup.sh
 
 # Change to the working directory
 WORKDIR /ros2_ws
 
-# Run these code after building the image
-# WORKDIR /ros2_ws
-# RUN colcon build --packages-select <package_name>
-# RUN bash -c "source ~/ros2_ws/install/setup.bash"
+RUN apt-get update && apt-get install -y ros-humble-imu-tools
 
-##################
-# Log
-##################
-# for "Findament_cmake.cmake" error, install ament-cmake
+RUN rosdep install --from-paths src --ignore-src -r -y
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh
+
+############
+# For Built version:
+    # RUN colcon build --symlink-install
+    # RUN colcon build --packages-select serial_imu
+    # RUN bash -c "source /ros2_ws/install/setup.bash"
+
+# next test items:
+# rviz2 test for imu visualisation -> check if imu's data is really working
+# explore use of tf2 & stuff for getting the position
