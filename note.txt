@@ -1,0 +1,29 @@
+# for documenting the CLI commands for testing & debug
+FROM <BaseImage>
+
+WORKDIR /ros2_ws
+RUN colcon build --packages-select serial_imu
+RUN bash -c "source /ros2_ws/install/setup.bash"
+## to launch:
+## ros2 launch serial_imu imu_spec_msg.launch.py
+
+# may need a step to clear the src folder in the base image
+# WORKDIR /ros2_ws
+# COPY /src /ros2_ws/src
+
+# to check port
+# WORKDIR /dev
+
+## use this to test the imu port access in raspi directly
+
+-----------------------------------
+
+to be done:
+[-] verison management rules of the images
+[] test the build time of "colcon-built core image" on Raspi
+[] test the usb port of IMU on RasPi
+[] test the IMU-related nodes on RasPi
+
+optional:
+[] solve the usb port issue of IMU on Win11
+[] test the IMU-related nodes on Win11

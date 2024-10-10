@@ -13,6 +13,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - Check whether the image is successfully built by `docker images`
 - `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it <image_name>`
     > For linux host env: `docker run --privileged -d -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
+    > To name the container specifically, add `-d --name <container_name>`
 
 The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged`
 
@@ -21,6 +22,17 @@ Should be also able to access the usb port with `-v /dev:/dev`
 To open a new terminal in the same docker container:
 - `docker ps` to check the container_id
 - `docker exec -it <container_id> bash`
+
+To save the container as a new image:
+- `docker login`
+- `docker ps` to check container ID
+- `docker commit <container_ID> <hub-user>/<repo-name>:<tag>`
+- `docker images` to check whether it is committed to local successfully 
+To further push the image to the Docker Hub:
+- `docker push <hub-user>/<repo-name>:<tag>`
+
+To rename the container for clarity:
+`docker rename <old`
 
 ### For Rviz2 and Gazebo
 Below steps needs to be done before running the docker.

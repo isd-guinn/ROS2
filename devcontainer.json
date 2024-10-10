@@ -31,11 +31,15 @@ Reference: https://docs.ros.org/en/humble/How-To-Guides/Setup-ROS-2-with-VSCode-
         "--net=host",
         "--pid=host",
         "--ipc=host",
-        "-e", "DISPLAY=${env:DISPLAY}"
+        "-e", "DISPLAY=${env:DISPLAY}",
+        "-it",
+        "--privileged"
     ],
     "mounts": [
        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-       "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
+       "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached",
+    //    for USB devices including IMU
+       "source=/dev,target=/dev,type=bind"
     ],
     "postCreateCommand": "rosdep update && rosdep install --from-paths src --ignore-src -y"
 }
