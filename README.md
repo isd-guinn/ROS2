@@ -9,10 +9,12 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - Open Docker Desktop
 - Change directory to the cloned repo
 - If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
-- `docker buildx build --load --platform linux/amd64 -t <image_name> .`
+- `docker buildx build --load --platform linux/arm64,linux/amd64 -t <image_name> .`
 - Check whether the image is successfully built by `docker images`
 - `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it <image_name>`
-    > For linux host env: `docker run --privileged -d -it --env="DISPLAY" --env="QT_X11_NO_MITSHM=1" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" <image_name>`
+    > For linux host env: 
+    > `xhost +`
+    > `docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -e DISPLAY=:0 <image_name>`
     > To name the container specifically, add `-d --name <container_name>`
 
 The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged`
@@ -32,7 +34,9 @@ To further push the image to the Docker Hub:
 - `docker push <hub-user>/<repo-name>:<tag>`
 
 To rename the container for clarity:
-`docker rename <old`
+`docker rename <old> <new>`
+
+To check whether the docker is arm64 or amd64: `dpkg --print-architecture`
 
 ### For Rviz2 and Gazebo
 Below steps needs to be done before running the docker.
@@ -59,7 +63,9 @@ Exit by typing `exit` in the docker terminal.
 Rasberry Pi 5's env:
 - Ubuntu 24.04
 - ROS2 Jazzy
-- linux/amd64
+- host platform = linux/arm64/v8
+
+For `--platform linux/arm64, linux/amd64`, arm64 is for raspi 5 & amd64 is for windows laptop. 
 
 Reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
 

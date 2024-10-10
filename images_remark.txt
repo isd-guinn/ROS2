@@ -1,13 +1,13 @@
 # TEMPORARY USE ONLY
 # this is for personal remark of different images built during the testing stage
 
-General format of naming images = <date_aim>:<tag>
+General format of naming images = <hub_user>/ros2::<tag-MMDD-purpose>
 
 General naming of tag:
 <base> = "base" core image
 <built> = base core image that already "colcon-built"
-<base-mod> = modified base image for testing
-<built-mod> = modified colcon-built image for testing
+<basemod> = modified base image for testing
+<builtmod> = modified colcon-built image for testing
 
 ----------------------------------------------
 [RUNDOWN]
