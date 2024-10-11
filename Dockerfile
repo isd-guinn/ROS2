@@ -1,14 +1,11 @@
-FROM ros:humble-ros-base-jammy
+FROM arm64v8/ros:humble-ros-base
+# alt: humble-ros-base-jammy
 # osrf/ros:humble-desktop-full DOES NOT WORK FOR linux/arm64
+# same for ghcr.io/sloretz/ros:humble-desktop & ros:humble-ros-base-jammy
 # Ubuntu 22.04 Jammy Jellyfish
 
 WORKDIR /
 
-# install ros2 packages - so that it's same as humble-desktop
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-    ros-humble-desktop=0.10.0-1* \
-    && rm -rf /var/lib/apt/lists/*
 # Install necessary packages
 RUN apt-get update
 RUN apt-get upgrade -y
@@ -32,6 +29,12 @@ RUN apt-get install -y \
     ros-humble-turtlebot4-desktop \
     ros-humble-turtlebot4-simulator
 
+# install ros2 packages - so that it's same as humble-desktop
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+    ros-humble-desktop=0.10.0-1* \
+    && rm -rf /var/lib/apt/lists/*
+
 # install (ignition) gazebo fortress
 # reference: https://gazebosim.org/docs/fortress/install_ubuntu/
 RUN sudo apt-get install -y lsb-release gnupg
@@ -40,12 +43,16 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/p
 RUN sudo apt-get update
 RUN sudo apt-get install -y ignition-fortress
 
-# install dependencies for nav2
-RUN apt-get install -y \
-    ros-humble-gazebo-ros \
-    ros-humble-turtlebot3-gazebo
+RUN sudo apt-get install -y software-properties-common
 
-# install dependencies for imu
+# install dependencies for nav2 -- ERROR!!
+RUN sudo add-apt-repository -y ppa:openrobotics/gazebo11-non-amd64
+RUN sudo apt update
+# RUN apt-get install -y \
+#     ros-humble-gazebo-ros \
+#     ros-humble-turtlebot3-gazebo
+
+# # install dependencies for imu
 RUN apt-get install -y \
     ament-cmake
 
@@ -82,14 +89,25 @@ RUN vcs import --input https://raw.githubusercontent.com/ros-controls/ros2_contr
 RUN sudo rosdep fix-permissions \ 
     && rosdep update --rosdistro=$ROS_DISTRO
 RUN sudo apt-get update
-RUN rosdep install --from-paths src --ignore-src -r -y
-RUN . /opt/ros/${ROS_DISTRO}/setup.sh
+
 
 # Change to the working directory
 WORKDIR /ros2_ws
 
 # Command to run on container start for creating this image
 #
+# for Nav2 dependencies:
+# sudo nano /etc/apt/sources.list
+# (paste: deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly jammy main)
+# wget  http://packages.osrfoundation.org/gazebo.key
+# sudo apt-key add gazebo.key
+# sudo apt-get update
+# sudo apt-get install -y gazebo
+# [if no these steps: missing extra pkg - ros-humble-gazebo-dev] <-- required for colcon build (gazebo_ros2_control)
+#
+# must have these line before colcon build
+# RUN rosdep install --from-paths src --ignore-src -r -y
+# RUN . /opt/ros/${ROS_DISTRO}/setup.sh
 # WORKDIR /ros2_ws
 # RUN colcon build --symlink-install (times 3)
 # 

@@ -5,21 +5,29 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 ### Set-up
 - Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Clone the repository
-### Run the Docker
-- Open Docker Desktop
+### Run the Docker (Linux on RasPi5)
+- Open Docker Desktop / Start Docker Engine
 - Change directory to the cloned repo
 - If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
-- `docker buildx build --load --platform linux/arm64,linux/amd64 -t <image_name> .`
-- Check whether the image is successfully built by `docker images`
-- `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it <image_name>`
-    > For linux host env: 
-    > `xhost +`
-    > `docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -e DISPLAY=:0 <image_name>`
+```
+docker buildx build --load --platform linux/arm64,linux/amd64 -t <image_name> .
+docker images #to check whether image is successfully built
+xhost +
+docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 <image_name>
+```
+    > For windows host env: 
+    > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it <image_name>`
     > To name the container specifically, add `-d --name <container_name>`
 
-The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged`
+The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged` (catch all for all devices on host)
+- backup approach: `-v /sys:/sys`
+- to test: `cd /sys/class/gpio`
 
-Should be also able to access the usb port with `-v /dev:/dev`
+Should be also able to access the usb port with `-v /dev:/dev`. To test: 
+```
+cd /dev
+--> check if there's ttyUSB0 after plugging in the IMU
+```
 
 To open a new terminal in the same docker container:
 - `docker ps` to check the container_id
@@ -40,11 +48,11 @@ To check whether the docker is arm64 or amd64: `dpkg --print-architecture`
 
 ### For Rviz2 and Gazebo
 Below steps needs to be done before running the docker.
+> Linux
+- `xhost local:root` (to enable X11 server)
 > Windows 
 - install [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
 - Set display number as 0 in XLaunch
-> Linux (to be tested)
-- `xhost local:root` (to enable X11 server)
 
 ### For Nav2
 Before running anything using nav2, set key env variables below:
@@ -64,8 +72,6 @@ Rasberry Pi 5's env:
 - Ubuntu 24.04
 - ROS2 Jazzy
 - host platform = linux/arm64/v8
-
-For `--platform linux/arm64, linux/amd64`, arm64 is for raspi 5 & amd64 is for windows laptop. 
 
 Reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
 

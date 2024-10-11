@@ -11,29 +11,26 @@ RUN bash -c "source /ros2_ws/install/setup.bash"
 # WORKDIR /ros2_ws
 # COPY /src /ros2_ws/src
 
-# to check port
-# WORKDIR /dev
-
-## use this to test the imu port access in raspi directly
+-----------------------------------
+Path for RasPi5 devices:
+IMU = /dev/ttyUSB0
+UART = 
 
 -----------------------------------
 current:
-[] correct to arm64 (base first) <-- ddl 11
-
-to be done:
-[] test the build time of "colcon-built core image" on Raspi
+[?] correct to arm64 (base first) <--
+[] built image
 [] test the IMU-related nodes on RasPi
-[] test GPIO pin expose
-
-[] kalman filters?? (ros2) robot_localization
 
 done: 
 [-] verison management rules of the images
-[-] test display on raspi
+[-] test GPIO pin expose
 [-] test the usb port of IMU on RasPi
+[-] test display on raspi
 
 optional:
 [] identify the ttyUSB0 for IMU
 # can use `udevadm info --attribute-walk --name=/dev/ttyUSB0` to check detail info
 [] solve the usb port issue of IMU on Win11
 [] test the IMU-related nodes on Win11
+[] kalman filters?? (ros2) robot_localization
