@@ -26,19 +26,24 @@ using namespace std::chrono_literals;
 using namespace std;
 static raw_t raw;
 
+// create the node class "IMUPublisher" by inheriting from "rclcpp::Node"
 class IMUPublisher : public rclcpp::Node
 {
 	public:
 		int fd = 0;
 		uint8_t buf[BUF_SIZE] = {0};
+		// name the node as "IMU_publisher"
 		IMUPublisher() : Node("IMU_publisher")	
 		{
 			fd = open_serial();
+			// message type = Imu, topic name = "/Imu_data"
 			imu_pub = this->create_publisher<sensor_msgs::msg::Imu>("/Imu_data", 20);
-			timer_ = this->create_wall_timer(2ms, std::bind(&IMUPublisher::timer_callback, this));
+			// timer_callback function to be init every 2ms -> 500ms for testing purpose
+			timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::timer_callback, this));
 		}
 
 	private: 
+		// where the msg data is set and actually published
 		void timer_callback()
 		{
 			auto imu_data = sensor_msgs::msg::Imu();
@@ -110,6 +115,7 @@ class IMUPublisher : public rclcpp::Node
 			return fd;
 		}
 
+		// declaration of timer & publisher
 		rclcpp::TimerBase::SharedPtr timer_;
 		rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 };
@@ -117,7 +123,9 @@ class IMUPublisher : public rclcpp::Node
 
 int main(int argc, const char * argv[])
 {
+	// init ROS2
 	rclcpp::init(argc, argv);
+	// starts processing data from the node, including callbacks from the timer
 	rclcpp::spin(std::make_shared<IMUPublisher>());
 	rclcpp::shutdown();
 

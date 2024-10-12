@@ -10,7 +10,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - Change directory to the cloned repo
 - If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
 ```
-docker buildx build --load --platform linux/arm64,linux/amd64 -t <image_name> .
+docker buildx build --load --platform linux/arm64 -t <image_name> .
 docker images #to check whether image is successfully built
 xhost +
 docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 <image_name>

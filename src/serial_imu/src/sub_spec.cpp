@@ -6,9 +6,12 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <iomanip>
 
+// create a dummy share pointer node from rclcpp::Node
 rclcpp::Node::SharedPtr nh = nullptr;
 using namespace std;
 
+// receive msg data published over the topic
+// then write to console using cout
 void topic_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
 {
 
@@ -66,9 +69,12 @@ void topic_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
 int main(int argc,const char* argv[])
 {
 	rclcpp::init(argc, argv);
+	// create a node named "imu_sub" and link it to the share pointer node
 	nh = std::make_shared<rclcpp::Node>("imu_sub");
+	// declare & init a subscription
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub ;
 	imu_sub = nh->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10,topic_callback);
+	// start processing data from the node
 	rclcpp::spin(nh);
 	rclcpp::shutdown();
 

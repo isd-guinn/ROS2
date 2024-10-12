@@ -1,7 +1,7 @@
 # TEMPORARY USE ONLY
 # this is for personal remark of different images built during the testing stage
 
-General format of naming images = <hub_user>/ros2::<tag-MMDD-purpose>
+General format of naming images = <hub_user>/ros2:<tag-MMDD-purpose>
 
 General naming of tag:
 <base> = "base" core image
