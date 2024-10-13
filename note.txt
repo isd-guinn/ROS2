@@ -7,6 +7,12 @@ RUN bash -c "source /ros2_ws/install/setup.bash"
 ## to launch:
 ## ros2 launch serial_imu imu_spec_msg.launch.py
 
+imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
+when at rest, 
+fluctuate +-0.01x for linear acc,
++-0.001 for angular velocity
++-0.0002 for orientation 
+
 # may need a step to clear the src folder in the base image
 # WORKDIR /ros2_ws
 # COPY /src /ros2_ws/src

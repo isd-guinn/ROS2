@@ -40,6 +40,7 @@ To save the container as a new image:
 - `docker images` to check whether it is committed to local successfully 
 To further push the image to the Docker Hub:
 - `docker push <hub-user>/<repo-name>:<tag>`
+If seems stucked, try `sudo systemctl restart docker`
 
 To rename the container for clarity:
 `docker rename <old> <new>`

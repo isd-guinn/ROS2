@@ -48,6 +48,7 @@ void ch_dump_imu_data(raw_t *raw)
     int i;
     if(raw->item_code[0] != KItemGWSOL)
     {
+        // case with only one imu
         CH_TRACE("%-16s%d\r\n",       "id:",  raw->imu[0].id);
         CH_TRACE("%-16s%.3f %.3f %.3f\r\n",       "acc(G):",        raw->imu[0].acc[0], raw->imu[0].acc[1],  raw->imu[0].acc[2]);
         CH_TRACE("%-16s%.3f %.3f %.3f\r\n",       "gyr(deg/s):",    raw->imu[0].gyr[0], raw->imu[0].gyr[1],  raw->imu[0].gyr[2]);
@@ -66,6 +67,7 @@ void ch_dump_imu_data(raw_t *raw)
     }
     else
     {
+        // case with i-1 imus
         CH_TRACE("gateway: %s%d, %s%d\r\n",       "gwid:",      raw->gwid, "node cnt:", raw->nimu);
         for(i=0; i<raw->nimu; i++)
         {
