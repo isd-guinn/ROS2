@@ -16,7 +16,7 @@ xhost +
 docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 <image_name>
 ```
     > For windows host env: 
-    > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it <image_name>`
+    > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it --platform linux/arm64 <image_name>`
     > To name the container specifically, add `-d --name <container_name>`
 
 The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged` (catch all for all devices on host)
@@ -28,6 +28,9 @@ Should be also able to access the usb port with `-v /dev:/dev`. To test:
 cd /dev
 --> check if there's ttyUSB0 after plugging in the IMU
 ```
+
+To copy things from docker to host:
+`docker cp <container_id>:/path/to/the/file /path/to/be/saved`
 
 To open a new terminal in the same docker container:
 - `docker ps` to check the container_id

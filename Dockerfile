@@ -1,5 +1,3 @@
-# for testing imu nodes
-
 FROM arm64v8/ros:humble-ros-base
 
 WORKDIR /
@@ -45,6 +43,8 @@ RUN rosdep install --from-paths src --ignore-src -r -y
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh
 
 ############
+# Pending changes 
+
 # For Built version:
     # RUN colcon build --symlink-install
     # RUN colcon build --packages-select serial_imu

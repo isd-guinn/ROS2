@@ -1,9 +1,12 @@
 # for documenting the CLI commands for testing & debug
 FROM <BaseImage>
 
-WORKDIR /ros2_ws
-RUN colcon build --packages-select serial_imu
-RUN bash -c "source /ros2_ws/install/setup.bash"
+sudo apt install nlohmann-json3-dev
+
+cd /ros2_ws
+source /ros2_ws/install/setup.bash
+colcon build --packages-select serial_imu
+
 ## to launch:
 ## ros2 launch serial_imu imu_spec_msg.launch.py
 
@@ -24,15 +27,10 @@ UART =
 
 -----------------------------------
 current:
-[?] correct to arm64 (base first) <--
-[] built image
-[] test the IMU-related nodes on RasPi
+[] dead reckoning
+[] plot graph
 
 done: 
-[-] verison management rules of the images
-[-] test GPIO pin expose
-[-] test the usb port of IMU on RasPi
-[-] test display on raspi
 
 optional:
 [] identify the ttyUSB0 for IMU

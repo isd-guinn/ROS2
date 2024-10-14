@@ -37,7 +37,7 @@ class IMUPublisher : public rclcpp::Node
 		{
 			fd = open_serial();
 			// message type = Imu, topic name = "/Imu_data"
-			imu_pub = this->create_publisher<sensor_msgs::msg::Imu>("/Imu_data", 20);
+			imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/Imu_data", 20);
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::timer_callback, this));
 		}
@@ -46,6 +46,7 @@ class IMUPublisher : public rclcpp::Node
 		// where the msg data is set and actually published
 		void timer_callback()
 		{
+			// message is named "imu_data"
 			auto imu_data = sensor_msgs::msg::Imu();
 			int n = read(fd, buf, sizeof(buf));
 
@@ -57,6 +58,7 @@ class IMUPublisher : public rclcpp::Node
 				{
 					if(rev)
 					{
+						// for the to-be-pub message "imu_data"
 						imu_data.orientation.w = raw.imu[raw.nimu - 1].quat[0];
 						imu_data.orientation.x = raw.imu[raw.nimu - 1].quat[1];	
 						imu_data.orientation.y = raw.imu[raw.nimu - 1].quat[2];
@@ -70,7 +72,7 @@ class IMUPublisher : public rclcpp::Node
 
 						imu_data.header.stamp = rclcpp::Clock().now();
 						imu_data.header.frame_id = "base_link";
-						imu_pub->publish(imu_data);
+						imu_pub_->publish(imu_data);
 					}
 				}
 			}
@@ -117,7 +119,7 @@ class IMUPublisher : public rclcpp::Node
 
 		// declaration of timer & publisher
 		rclcpp::TimerBase::SharedPtr timer_;
-		rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+		rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
 };
 
 
