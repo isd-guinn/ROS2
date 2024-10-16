@@ -70,10 +70,10 @@ int main(int argc,const char* argv[])
 {
 	rclcpp::init(argc, argv);
 	// create a node named "imu_sub" and link it to the share pointer node
-	nh = std::make_shared<rclcpp::Node>("imu_sub");
+	nh = std::make_shared<rclcpp::Node>("IMU_subscriber");
 	// declare & init a subscription
-	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub ;
-	imu_sub = nh->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10,topic_callback);
+	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_ ;
+	imu_sub_ = nh->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10,topic_callback);
 	// start processing data from the node
 	rclcpp::spin(nh);
 	rclcpp::shutdown();

@@ -11,7 +11,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 - If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
 ```
 docker buildx build --load --platform linux/arm64 -t <image_name> .
-docker images #to check whether image is successfully built
+docker images # to check whether image is successfully built
 xhost +
 docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 <image_name>
 ```
@@ -19,30 +19,36 @@ docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sy
     > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it --platform linux/arm64 <image_name>`
     > To name the container specifically, add `-d --name <container_name>`
 
-The docker should be able to access to Raspberry Pi GPIO Pins with `--privileged` (catch all for all devices on host)
-- backup approach: `-v /sys:/sys`
-- to test: `cd /sys/class/gpio`
+### Hardware Access of Docker
+All RasPi GPIO pins: `--privileged`
 
-Should be also able to access the usb port with `-v /dev:/dev`. To test: 
-```
-cd /dev
---> check if there's ttyUSB0 after plugging in the IMU
-```
+USB ports: `-v /dev:/dev`
 
+If above does not work, try also: `-v /sys:/sys`
+
+To check: `cd /sys/class/gpio` or `cd /dev`
+
+### Docker CLI Quick Reference
 To copy things from docker to host:
 `docker cp <container_id>:/path/to/the/file /path/to/be/saved`
 
 To open a new terminal in the same docker container:
-- `docker ps` to check the container_id
-- `docker exec -it <container_id> bash`
+```
+docker ps #check container_id
+docker exec -it <container_id> bash
+```
 
 To save the container as a new image:
-- `docker login`
-- `docker ps` to check container ID
-- `docker commit <container_ID> <hub-user>/<repo-name>:<tag>`
-- `docker images` to check whether it is committed to local successfully 
-To further push the image to the Docker Hub:
-- `docker push <hub-user>/<repo-name>:<tag>`
+```
+docker login
+docker ps #check container_id
+docker commit <container_ID> <hub-user>/<repo-name>:<tag>
+docker images #check committed to local or not
+```
+To push image to Docker Hub:
+```
+docker push <hub-user>/<repo-name>:<tag>
+```
 If seems stucked, try `sudo systemctl restart docker`
 
 To rename the container for clarity:
@@ -50,6 +56,10 @@ To rename the container for clarity:
 
 To check whether the docker is arm64 or amd64: `dpkg --print-architecture`
 
+### Exit the Docker
+Exit by typing `exit` in the docker terminal.
+
+## Support for other packges
 ### For Rviz2 and Gazebo
 Below steps needs to be done before running the docker.
 > Linux
@@ -65,9 +75,6 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gaz
 ```
 For testing, you can try:
 `ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False`
-
-### Exit the Docker
-Exit by typing `exit` in the docker terminal.
 
 ## Remarks
 [Docker CLI Cheat Sheet](https://docs.docker.com/get-started/docker_cheatsheet.pdf)

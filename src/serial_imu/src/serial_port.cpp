@@ -77,6 +77,7 @@ class IMUPublisher : public rclcpp::Node
 				}
 			}
 
+			// for preparing to receive the next data
 			memset(buf,0,sizeof(buf));
 		}
 

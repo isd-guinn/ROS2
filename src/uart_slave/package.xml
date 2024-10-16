@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>serial_imu</name>
+  <name>uart_slave</name>
   <version>0.0.0</version>
-  <description>serial imu data from CH104M module</description>
+  <description>send data from RasPi5 to esp32 over UART</description>
   <maintainer email="whpak@connect.ust.hk">PAK, Wing Hin</maintainer>
   <license>Apache License 2.0 </license>
 
@@ -12,9 +12,6 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
-
-  <!-- new exec_depend added for the ros2 launch approach-->
-  <!-- <exec_depend>ros2launch</exec_depend> -->
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

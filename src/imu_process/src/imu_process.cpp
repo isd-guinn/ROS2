@@ -33,8 +33,8 @@ class IMUProcessor : public rclcpp::Node
 		// name the node as "IMU_processor"
 		IMUProcessor() : Node("IMU_processor")	
 		{	
-			// pub message type NOT IMU! -> self-defined type, pub topic name = "Imu_processed"
-			imu_processed_pub_ = this->create_publisher<std_msgs::msg::String>("Imu_processed", 20);
+			// pub message type NOT IMU! -> self-defined type, pub topic name = "/Imu_processed"
+			imu_processed_pub_ = this->create_publisher<std_msgs::msg::String>("/Imu_processed", 20);
 			// sub message type = Imu, sub topic name = "Imu_data"
 			imu_processed_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&IMUProcessor::topic_callback, this, std::placeholders::_1));
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
