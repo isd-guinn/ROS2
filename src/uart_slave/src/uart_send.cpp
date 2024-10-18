@@ -1,39 +1,55 @@
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include <sensor_msgs/msg/imu.hpp>
 
 #include <unistd.h>   // File IO
 #include <fcntl.h>    // File Control & Access Modes
 #include <errno.h>
 #include <termios.h>  // for terminal operation
 
+#include <stdio.h>   
+#include <cstdint> 
 #include <chrono>
 #include <memory>
 
-#include "uart_slave/SerialCommunication.hpp"
-// #include <wiringPi.h>
-// #include <wiringSerial.h>
+#include <iostream>
+#include <iomanip>
+
+#define SMALL_ENDIAN
+// #define BIG_ENDIAN
+
+#include "uart_slave/MasterSerialProtocol.hpp"
+#include "serial_imu/msg/euler_angle.hpp" // ???
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #define BAUD          (B115200)
-#define SLAVE_SERIAL  ("/dev/ttyAMA0") 
-// if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
-/* 
-to use GPIO pin instead ("/dev/ttyAMA0"), 
-sudo nano /boot/config.txt
-sudo nano /boot/cmdline.txt
-go to raspi-config and enable serial port -> reboot 
-now config.txt should have dtparam=uart0=on
-and ttyAMA0 should show up in /dev
-*/
+#define SLAVE_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
+#define DEG_TO_RAD  (0.01745329)
 #ifdef __cplusplus
 }
 #endif
 
 using namespace std::chrono_literals;
 using namespace std;
+
+// Store all the required states for updates the modules
+struct RobotState
+{ 
+  bool v_estop;
+  control_mode_t control_mode;
+  float speed_target;
+  float speed_current;
+  float angle_target;   // pass radian
+  float angle_current;  // pass radian
+  float angular_speed_target;
+  float angular_speed_current;
+  float vacuum_voltage;
+  bool foc_engaged;
+};
+
+struct RobotState rs{ false, NULL_CONTROL, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false };
 
 class UartPublisher : public rclcpp::Node
 {
@@ -43,8 +59,12 @@ public:
         : Node("Uart_sender")
     {
         uart_fd_ = open_serial();
-        // uart_sub_imuraw_ = this->create_publisher<sensor_msgs::msg::Imu>("Imu_data", 10, imu_callback);
-        // uart_sub_algo_ = this->create_publisher<???>("???", 10, algo_callback);
+        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, imuraw_callback);
+        // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
+        uart_sub_euler_ = this->create_subscription<serial_imu::msg::Euler_Angle>("Imu_euler_angle", 10, euler_callback);
+        // uart_sub_algo_ = this->create_subscription<???>("???", 10, algo_callback);
+        
+        // send data to slave every 1s
         timer_ = this->create_wall_timer(
             1000ms, std::bind(&UartPublisher::timer_callback, this));
     }
@@ -58,43 +78,11 @@ public:
     }
 
 private:
-  void timer_callback()
-  {
-    uint8_t data[POCKET_SIZE];
-
-    // prepare the pocket
-    data[0] = '>'; // StartBit
-    data[1] = EstopDisabledBit; // EStopBit
-    data[2] = WBDirStopBit; // WBDirBit
-    data[POCKET_SIZE-1] = 0x00; // reset the value
-    // Calculate checksum
-    for (int i = 0; i < POCKET_SIZE - 1; i++) {
-        data[POCKET_SIZE - 1] += data[i]; // check sum
-    }
-
-    // Write to Serial Port
-    ssize_t bytes_written = write(uart_fd_, data, sizeof(data));
-    if (bytes_written == -1) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to write to serial port: %s", strerror(errno));
-    }
-    else
-    {
-      RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
-      // for debug: display the data
-      for (int i = 0; i < POCKET_SIZE; i++)
-      {
-        RCLCPP_INFO(this->get_logger(), "wrote %x ", data[i]);
-      }
-    }
-  }
-
-  // void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
-  //   // get the data from the topic
-  // }
-
-  // void algo_callback(const ??? msg){
-  //   // get the data from the topic
-  // }
+  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
+  rclcpp::Subscription<serial_imu::msg::Euler_Angle>::SharedPtr uart_sub_euler_;
+  // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
+  // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
 
   int open_serial(void)
   {
@@ -123,9 +111,93 @@ private:
     return uart_fd_;
   }
 
-  rclcpp::TimerBase::SharedPtr timer_;
-  // rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
-  // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
+  void timer_callback()
+  {
+    uint8_t data[M2S_POCKET_SIZE]={0};
+
+    // dummy data for testing
+    float dummy_speed_target = 12.0f;
+    float dummy_angle_target = 2.0f;
+    float dummy_v_pump = 3.0f;
+
+    rs.angle_target = dummy_angle_target;
+    rs.speed_target = dummy_speed_target;
+    rs.v_pump = dummy_v_pump;
+
+    // prepare the pocket
+    data[BYTE_POS_M2S_STARTBIT] = START_BIT; 
+    data[BYTE_POS_M2S_VESTOP] = (rs.v_estop?) V_ESTOP_EN_CODE : V_ESTOP_DIS_CODE;
+    data[BYTE_POS_M2S_CONTROLMODE] = rs.control_mode; // fixed atm
+    for (int i = BYTE_POS_M2S_TARGETSPEED; i < BYTE_POS_M2S_CURRENTSPEED; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARGETSPEED);
+    }
+    for (int i = BYTE_POS_M2S_CURRENTSPEED; i < BYTE_POS_M2S_TARGETANGLE; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURRENTSPEED);
+    }
+    for (int i = BYTE_POS_M2S_TARGETANGLE; i < BYTE_POS_M2S_CURRENTANGLE; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARGETANGLE);
+    }
+    for (int i = BYTE_POS_M2S_CURRENTANGLE; i < BYTE_POS_M2S_TARANGSPEED; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURRENTANGLE);
+    }
+    for (int i = BYTE_POS_M2S_TARANGSPEED; i < BYTE_POS_M2S_CURANGSPEED; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARANGSPEED);
+    }
+    for (int i = BYTE_POS_M2S_CURANGSPEED; i < BYTE_POS_M2S_VACUUMVOLTAGE; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURANGSPEED);
+    }
+    for (int i = BYTE_POS_M2S_VACUUMVOLTAGE; i < BYTE_POS_M2S_FOCMODE; i++) {
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_VACUUMVOLTAGE);
+    }
+    data[BYTE_POS_M2S_FOCMODE] = FOC_DIS_CODE; // FOCMode
+
+    uint8_t checksum = 0;
+    // Calculate checksum
+    for (int i = 0; i < M2S_POCKET_SIZE - 1; i++) {
+        checksum += data[i];
+    }
+    data[BYTE_POS_M2S_CHECKSUM] = checksum;
+
+    // Write to Serial Port
+    ssize_t bytes_written = write(uart_fd_, data, sizeof(data));
+
+    if (bytes_written == -1) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to write to serial port: %s", strerror(errno));
+    }
+    else
+    {
+      RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
+      // for debug: display the bytes
+      std::cout << "Bytes of the data: ";
+      for (int i = 0; i < M2S_POCKET_SIZE; i++)
+      {
+        std::cout << std::hex << static_cast<int>(byteArray[i]) << " ";
+      }
+    }
+  }
+
+  void imuraw_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
+    // using info of x for testing purpose
+    rs.speed_current = msg->linear_acceleration.x;
+    rs.angular_speed_current = msg->angular_velocity.x; // in radian
+  }
+
+  void euler_callback(const serial_imu::msg::Euler_Angle::SharedPtr msg){
+    rs.angle_current = msg->yaw_z; // in radian
+  }
+
+  // void imuprocessed_callback(const ??? msg){
+  //   // get current speed
+  //   // get current angular speed
+  // }
+
+  // void algo_callback(const ??? msg){
+  //   // get target speed
+  //   // get target angle
+  //   // get target angular speed
+  //   // get virtual estop
+  //   // get control mode
+  // }
 };
 
 int main(int argc, char * argv[])

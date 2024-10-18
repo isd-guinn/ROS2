@@ -38,6 +38,7 @@ class IMUPublisher : public rclcpp::Node
 			fd = open_serial();
 			// message type = Imu, topic name = "/Imu_data"
 			imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/Imu_data", 20);
+			imu_pub_euler_ = this->create_publisher<serial_imu::msg::Euler_Angle>("/Imu_euler_angle", 20);
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::timer_callback, this));
 		}
@@ -48,6 +49,7 @@ class IMUPublisher : public rclcpp::Node
 		{
 			// message is named "imu_data"
 			auto imu_data = sensor_msgs::msg::Imu();
+			auto imu_euler = serial_imu::msg::Euler_Angle();
 			int n = read(fd, buf, sizeof(buf));
 
 			for(int i = 0; i < n; i++)
@@ -70,9 +72,14 @@ class IMUPublisher : public rclcpp::Node
 						imu_data.linear_acceleration.y = raw.imu[raw.nimu - 1].acc[1] * GRA_ACC;
 						imu_data.linear_acceleration.z = raw.imu[raw.nimu - 1].acc[2] * GRA_ACC;
 
+						imu_euler.pitch_x 	= raw.imu[raw.nimu - 1].eul[0] * DEG_TO_RAD;
+						imu_euler.roll_y 	= raw.imu[raw.nimu - 1].eul[1] * DEG_TO_RAD;
+						imu_euler.yaw_z 	= raw.imu[raw.nimu - 1].eul[2] * DEG_TO_RAD;
+
 						imu_data.header.stamp = rclcpp::Clock().now();
 						imu_data.header.frame_id = "base_link";
 						imu_pub_->publish(imu_data);
+						imu_pub_euler_->publish(imu_euler);
 					}
 				}
 			}
@@ -121,6 +128,7 @@ class IMUPublisher : public rclcpp::Node
 		// declaration of timer & publisher
 		rclcpp::TimerBase::SharedPtr timer_;
 		rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+		rclcpp::Publisher<serial_imu::msg::Euler_Angle>::SharedPtr imu_pub_euler_;
 };
 
 

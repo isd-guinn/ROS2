@@ -21,10 +21,18 @@ fluctuate +-0.01x for linear acc,
 # WORKDIR /ros2_ws
 # COPY /src /ros2_ws/src
 
+to use GPIO pin instead ("/dev/ttyAMA0"), 
+sudo nano /boot/config.txt
+sudo nano /boot/cmdline.txt
+go to raspi-config and enable serial port -> reboot 
+now config.txt should have dtparam=uart0=on
+and ttyAMA0 should show up in /dev
+
 -----------------------------------
 Path for RasPi5 devices:
 IMU = /dev/ttyUSB0
-UART = 
+UART =  (GPIO) /dev/ttyAMA0
+        (onboard) /dev/ttyAMA10 or /dev/serial0
 
 -----------------------------------
 current:

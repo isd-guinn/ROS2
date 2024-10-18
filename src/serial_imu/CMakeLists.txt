@@ -25,10 +25,12 @@ find_package(rclcpp REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+# for the new message type
+find_package(rosidl_default_generators REQUIRED)
 
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Euler_Angle.msg"
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -41,13 +43,20 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(talker src/serial_port.cpp src/ch_serial.c)
-ament_target_dependencies(talker rclcpp std_msgs sensor_msgs)
+add_executable(talker 
+               src/serial_port.cpp src/ch_serial.c)
+ament_target_dependencies(talker 
+                          rclcpp std_msgs sensor_msgs)
 
-add_executable(listener src/sub_spec.cpp)
-ament_target_dependencies(listener rclcpp std_msgs sensor_msgs)
+add_executable(listener 
+               src/sub_spec.cpp)
+ament_target_dependencies(listener 
+                          rclcpp std_msgs sensor_msgs)
 
-install(TARGETS talker listener  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS 
+        talker 
+        listener  
+        DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

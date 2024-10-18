@@ -33,13 +33,27 @@ class IMUProcessor : public rclcpp::Node
 		// name the node as "IMU_processor"
 		IMUProcessor() : Node("IMU_processor")	
 		{	
-			// pub message type NOT IMU! -> self-defined type, pub topic name = "/Imu_processed"
-			imu_processed_pub_ = this->create_publisher<std_msgs::msg::String>("/Imu_processed", 20);
 			// sub message type = Imu, sub topic name = "Imu_data"
 			imu_processed_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&IMUProcessor::topic_callback, this, std::placeholders::_1));
+			// pub message type NOT IMU! -> self-defined type, pub topic name = "/Imu_processed"
+			imu_processed_pub_ = this->create_publisher<std_msgs::msg::String>("/Imu_processed", 20);
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
 		}
+
+		~IMUProcessor(){
+			// reset the data in json file - to be tested
+			std::ofstream outfile(position_file);
+			if (outfile.is_open()) {
+				json j;
+				j["pos_x"] = 0;				j["pos_y"] = 0;
+				j["vel_x"] = 0;				j["vel_y"] = 0;
+				outfile << j.dump();
+				outfile.close();
+			} else {
+				std::cerr << "Unable to open file for writing: " << position_file << std::endl;
+			}
+		}	
     private:
 		// integration function for dead reckoning
 		void manipulate(const sensor_msgs::msg::Imu::SharedPtr msg){
@@ -94,12 +108,11 @@ class IMUProcessor : public rclcpp::Node
         void topic_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 			// process the receive message
 			manipulate(msg);
-
             // message is named "imu_processed" with message type of "imu"
             auto imu_processed = std_msgs::msg::String();
 			// set the message data
 			imu_processed.data = "pos_x testing";
-			// publish the processed message
+			// publish the processed message to /Imu_processed topic
             imu_processed_pub_->publish(imu_processed);
         }
 

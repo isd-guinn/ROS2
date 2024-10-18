@@ -238,6 +238,7 @@ static int sync_ch(uint8_t *buf, uint8_t data)
     return buf[0] == CHSYNC1 && buf[1] == CHSYNC2;
 }
 
+// data is the byte received from the serial port, not the entire buffer
 int ch_serial_input(raw_t *raw, uint8_t data)
 {
     /* synchronize frame */
@@ -247,7 +248,7 @@ int ch_serial_input(raw_t *raw, uint8_t data)
         raw->nbyte = 2;
         return 0;
     }
-
+    
     raw->buf[raw->nbyte++] = data;
     
     if (raw->nbyte == CH_HDR_SIZE)

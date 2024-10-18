@@ -21,6 +21,13 @@ find_package(rclcpp REQUIRED)
 # ament_cmake must be included AFTER the call to find_package(rclcpp REQUIRED).
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(serial_imu REQUIRED)
+
+find_package(rosidl_default_generators REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/FOC_Angle.msg"
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -42,10 +49,20 @@ include_directories(
 )
 
 # to be updated
-add_executable(sender src/uart_send.cpp)
-ament_target_dependencies(sender rclcpp std_msgs)
+add_executable(sender 
+               src/uart_send.cpp)
+ament_target_dependencies(sender 
+                          rclcpp std_msgs serial_imu)
 
-install(TARGETS sender  DESTINATION lib/${PROJECT_NAME})
+add_executable(receiver 
+               src/uart_receive.cpp proc_serial_input.cpp)
+ament_target_dependencies(receiver 
+                          rclcpp std_msgs)
+
+install(TARGETS 
+        sender
+        receiver  
+        DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()
