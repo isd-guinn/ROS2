@@ -21,6 +21,12 @@ find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
+# for the new message type
+find_package(rosidl_default_generators REQUIRED)
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Position.msg"
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -33,10 +39,14 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(processor src/imu_process.cpp)
-ament_target_dependencies(processor rclcpp std_msgs sensor_msgs)
+add_executable( processor 
+                src/imu_process.cpp src/header.cpp)
+ament_target_dependencies(processor 
+                          rclcpp std_msgs sensor_msgs)
 
-install(TARGETS processor  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS 
+        processor  
+        DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

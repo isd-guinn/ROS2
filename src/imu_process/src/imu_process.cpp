@@ -1,30 +1,27 @@
-#include <iostream>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <sensor_msgs/msg/imu.hpp>
+#include <serial_imu/msg/euler_angle.hpp>
+#include "imu_process/msg/position.msg"
+#include "imu_process/msg/processed_data.hpp"
 
+#include <iostream>
 #include <memory>
 #include <unistd.h>
-
-#include <nlohmann/json.hpp>
 #include <fstream>
+
+// #include <nlohmann/json.hpp>
+#include "imu_process/header.hpp"
 
 // create a dummy share pointer node from rclcpp::Node for subscription of raw data
 // rclcpp::Node::SharedPtr nh = nullptr;
 using namespace std::chrono_literals;
 using namespace std;
-using json = nlohmann::json;
 
-const std::string position_file = "/position.json";
-static float pos_x, pos_y;
-static float vel_x, vel_y;
-static float acc_x, acc_y;
-
-float precision( float f, int places )
-{
-    float n = std::pow(10.0f, places ) ;
-    return std::round(f * n) / n ;
-}
+struct position_t local_data = {0.0f, 0.0f, 0.0f,	// position in local frame
+								0.0f, 0.0f, 0.0f,	// velocity in local frame
+								0.0f, 0.0f,	0.0f,	// current acceleration
+								0.0f, 0.0f, 0.0f};	// previous acceleration
 
 // create node class "IMUProcessor"
 class IMUProcessor : public rclcpp::Node
@@ -33,109 +30,66 @@ class IMUProcessor : public rclcpp::Node
 		// name the node as "IMU_processor"
 		IMUProcessor() : Node("IMU_processor")	
 		{	
-			// sub message type = Imu, sub topic name = "Imu_data"
-			imu_processed_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&IMUProcessor::topic_callback, this, std::placeholders::_1));
-			// pub message type NOT IMU! -> self-defined type, pub topic name = "/Imu_processed"
-			imu_processed_pub_ = this->create_publisher<std_msgs::msg::String>("/Imu_processed", 20);
-			// timer_callback function to be init every 2ms -> 500ms for testing purpose
+			rawimu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>
+									("Imu_data", 10, std::bind(&IMUProcessor::rawimu_callback, this, std::placeholders::_1));
+			euler_sub_ = this->create_subscription<serial_imu::msg::Euler_Angle>
+									("Imu_euler_angle", 10, std::bind(&IMUProcessor::euler_callback, this, std::placeholders::_1));
+
+			local_pos_pub = this->create_publisher<imu_process::msg::Position>("/Imu_processed", 20);
+			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_processed", 20);
+			
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
 		}
 
-		~IMUProcessor(){
-			// reset the data in json file - to be tested
-			std::ofstream outfile(position_file);
-			if (outfile.is_open()) {
-				json j;
-				j["pos_x"] = 0;				j["pos_y"] = 0;
-				j["vel_x"] = 0;				j["vel_y"] = 0;
-				outfile << j.dump();
-				outfile.close();
-			} else {
-				std::cerr << "Unable to open file for writing: " << position_file << std::endl;
-			}
-		}	
     private:
-		// integration function for dead reckoning
-		void manipulate(const sensor_msgs::msg::Imu::SharedPtr msg){
-			// Placeholder for dead reckoning integration logic
-			// Initialize variables for position, velocity, and acceleration
-
-			double dt = 0.1; // 100ms time step (assuming constant for simplicity)
-
-			// Read the position data from the file
-			std::ifstream infile(position_file);
-			if (infile.is_open()) {
-				json j;
-				infile >> j;
-				pos_x = j["pos_x"];				pos_y = j["pos_y"];
-				vel_x = j["vel_x"];				vel_y = j["vel_y"];
-				infile.close();
-			} else {
-				std::cerr << "Unable to open file for reading: " << position_file << std::endl;
-			}
-
-			// Update acceleration from IMU data
-			acc_x = precision(msg->linear_acceleration.x, 18);
-			acc_y = precision(msg->linear_acceleration.y, 18);
-
-			// Integrate acceleration to get velocity
-			vel_x += acc_x * dt;
-			vel_y += acc_y * dt;
-
-			// Integrate velocity to get position
-			pos_x += vel_x * dt;
-			pos_y += vel_y * dt;
-
-			// Print the current position for debugging
-			RCLCPP_INFO(this->get_logger(), "Integrated Position -> x: %f, y: %f", pos_x, pos_y);
-
-			// filter out noise & drift
-			
-			// Write the updated position data to the file
-			std::ofstream outfile(position_file);
-			if (outfile.is_open()) {
-				json j;
-				j["pos_x"] = pos_x;				j["pos_y"] = pos_y;
-				j["vel_x"] = vel_x;				j["vel_y"] = vel_y;
-				outfile << j.dump();
-				outfile.close();
-			} else {
-				std::cerr << "Unable to open file for writing: " << position_file << std::endl;
-			}
-		}
+		rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr rawimu_sub_;
+		rclcpp::Subscription<serial_imu::msg::Euler_Angle>::SharedPtr euler_sub_;
+		rclcpp::Publisher<imu_process::msg::Position>::SharedPtr local_pos_pub;
+		rclcpp::Publisher<imu_process::msg::Position>::SharedPtr global_pos_pub_;
+        rclcpp::TimerBase::SharedPtr timer_;
 
 		// callback for pub the integrated imu delta-position (x & y)
-        void topic_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
+        void rawimu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 			// process the receive message
-			manipulate(msg);
-            // message is named "imu_processed" with message type of "imu"
-            auto imu_processed = std_msgs::msg::String();
-			// set the message data
-			imu_processed.data = "pos_x testing";
-			// publish the processed message to /Imu_processed topic
-            imu_processed_pub_->publish(imu_processed);
+			dead_reckon(&local_data, &msg);
         }
 
-		void timer_callback(){
-			// periodic callback function to read the current position
-			std::ifstream infile(position_file);
-			if (infile.is_open()) {
-				json j;
-				infile >> j;
-				float pos_x = j["pos_x"];
-				float pos_y = j["pos_y"];
-				infile.close();
+		void euler_callback(const serial_imu::msg::Euler_Angle::SharedPtr euler_msg){
+			// process the euler angle
 
-				// Log the current position
-				RCLCPP_INFO(this->get_logger(), "Timer Callback - Current Position -> x: %f, y: %f", pos_x, pos_y);
-			} else {
-				std::cerr << "Unable to open file for reading: " << position_file << std::endl;
-			}
 		}
 
-		rclcpp::Publisher<std_msgs::msg::String>::SharedPtr imu_processed_pub_;
-		rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_processed_sub_;
-        rclcpp::TimerBase::SharedPtr timer_;
+		void timer_callback(){
+			// process the raw imu data
+			// dead_reckon(&local_data, &msg);
+
+			// publish local position
+            auto local = imu_process::msg::Position();
+			
+			local.pos_x = local_data.pos_x;
+			local.pos_y = local_data.pos_y;
+			local.pos_z = local_data.pos_z;
+			local.vel_x = local_data.vel_x;
+			local.vel_y = local_data.vel_y;
+			local.vel_z = local_data.vel_z;
+			local.acc_x = local_data.acc_x_current;
+			local.acc_y = local_data.acc_y_current;
+			local.acc_z = local_data.acc_z_current;
+
+			local.header.stamp = rclcpp::Clock().now();
+			local.header.frame_id = "base_link"; // the frame that this data is associated with
+            local_pos_pub->publish(local); 
+
+			// publish global position
+			auto global = imu_process::msg::Position();
+
+			global.header.stamp = rclcpp::Clock().now();
+			global.header.frame_id = "map"; // the frame that this data is associated with
+			
+			// debug
+			RCLCPP_INFO(this->get_logger(), "Integrated Local Position -> x: %f, y: %f", local_data.pos_x, local_data.pos_y);
+			// RCLCPP_INFO(this->get_logger(), "Integrated Global Position -> x: %f, y: %f", global.pos_x, global.pos_y);
+		}
 };
 
 int main(int argc,const char* argv[])
