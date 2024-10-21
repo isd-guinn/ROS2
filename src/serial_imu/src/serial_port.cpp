@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sensor_msgs/msg/imu.hpp>
 #include "rclcpp/rclcpp.hpp"
+#include "serial_imu/msg/euler_angle.hpp"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -38,7 +39,7 @@ class IMUPublisher : public rclcpp::Node
 			fd = open_serial();
 			// message type = Imu, topic name = "/Imu_data"
 			imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/Imu_data", 20);
-			imu_pub_euler_ = this->create_publisher<serial_imu::msg::Euler_Angle>("/Imu_euler_angle", 20);
+			imu_pub_euler_ = this->create_publisher<serial_imu::msg::EulerAngle>("/Imu_euler_angle", 20);
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::timer_callback, this));
 		}
@@ -49,7 +50,7 @@ class IMUPublisher : public rclcpp::Node
 		{
 			// message is named "imu_data"
 			auto imu_data = sensor_msgs::msg::Imu();
-			auto imu_euler = serial_imu::msg::Euler_Angle();
+			auto imu_euler = serial_imu::msg::EulerAngle();
 			int n = read(fd, buf, sizeof(buf));
 
 			for(int i = 0; i < n; i++)
@@ -128,7 +129,7 @@ class IMUPublisher : public rclcpp::Node
 		// declaration of timer & publisher
 		rclcpp::TimerBase::SharedPtr timer_;
 		rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-		rclcpp::Publisher<serial_imu::msg::Euler_Angle>::SharedPtr imu_pub_euler_;
+		rclcpp::Publisher<serial_imu::msg::EulerAngle>::SharedPtr imu_pub_euler_;
 };
 
 

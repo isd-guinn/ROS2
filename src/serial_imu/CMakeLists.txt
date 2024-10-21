@@ -28,8 +28,14 @@ find_package(sensor_msgs REQUIRED)
 # for the new message type
 find_package(rosidl_default_generators REQUIRED)
 
+ament_export_dependencies(rosidl_default_runtime)
+
+set(msg_files
+"msg/EulerAngle.msg"
+)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Euler_Angle.msg"
+  ${msg_files}
 )
 
 if(BUILD_TESTING)
@@ -43,15 +49,21 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(talker 
-               src/serial_port.cpp src/ch_serial.c)
-ament_target_dependencies(talker 
-                          rclcpp std_msgs sensor_msgs)
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-add_executable(listener 
-               src/sub_spec.cpp)
-ament_target_dependencies(listener 
-                          rclcpp std_msgs sensor_msgs)
+  
+  add_executable(talker 
+  src/serial_port.cpp src/ch_serial.c)
+  ament_target_dependencies(talker 
+  rclcpp std_msgs sensor_msgs)
+  
+  add_executable(listener 
+  src/sub_spec.cpp)
+  ament_target_dependencies(listener 
+  rclcpp std_msgs sensor_msgs)
+
+  target_link_libraries(talker "${cpp_typesupport_target}")
 
 install(TARGETS 
         talker 

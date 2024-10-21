@@ -2,7 +2,8 @@
 #define SERIAL_RECEIVE_HPP
 
 #include <stdint.h>
-#include <MasterSerialProtocol.hpp>
+// #include <MasterSerialProtocol.hpp>
+#include "uart_slave/MasterSerialProtocol.hpp"
 
 typedef struct
 {
@@ -20,6 +21,6 @@ typedef struct
 *           uint8_t data    I   stream data (1 byte)
 * return:   status (-1: error message, 0: no message, 1: input data successfully)
 */
-int serial_input(raw_t *raw, uint8_t data);
+int serial_input(raw_t *raw, uint8_t* Rx_buffer, const int num_bytes);
 
 #endif

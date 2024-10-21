@@ -21,12 +21,19 @@ find_package(rclcpp REQUIRED)
 # ament_cmake must be included AFTER the call to find_package(rclcpp REQUIRED).
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(serial_imu REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
+find_package(serial_imu REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
+ament_export_dependencies(rosidl_default_runtime)
+
+set(msg_files
+"msg/FocAngle.msg"
+)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/FOC_Angle.msg"
+  ${msg_files}
 )
 
 if(BUILD_TESTING)
@@ -48,16 +55,21 @@ include_directories(
   include
 )
 
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp)
+
 # to be updated
 add_executable(sender 
                src/uart_send.cpp)
 ament_target_dependencies(sender 
-                          rclcpp std_msgs serial_imu)
+                          rclcpp std_msgs serial_imu sensor_msgs)
 
 add_executable(receiver 
-               src/uart_receive.cpp proc_serial_input.cpp)
+               src/uart_receive.cpp src/proc_serial_input.cpp)
 ament_target_dependencies(receiver 
                           rclcpp std_msgs)
+
+target_link_libraries(receiver "${cpp_typesupport_target}")
 
 install(TARGETS 
         sender

@@ -18,7 +18,7 @@
 // #define BIG_ENDIAN
 
 #include "uart_slave/MasterSerialProtocol.hpp"
-#include "serial_imu/msg/euler_angle.hpp" // ???
+#include "serial_imu/msg/euler_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -33,6 +33,7 @@ extern "C"{
 
 using namespace std::chrono_literals;
 using namespace std;
+
 
 // Store all the required states for updates the modules
 struct RobotState
@@ -55,13 +56,17 @@ class UartPublisher : public rclcpp::Node
 {
 public:
     int uart_fd_ = 0;
+    float temp_speed_current, temp_angle_current, temp_angular_speed_current = 0;
+
     UartPublisher()
         : Node("Uart_sender")
     {
         uart_fd_ = open_serial();
-        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, imuraw_callback);
+        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, 
+                            std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
-        uart_sub_euler_ = this->create_subscription<serial_imu::msg::Euler_Angle>("Imu_euler_angle", 10, euler_callback);
+        uart_sub_euler_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, 
+                          std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
         // uart_sub_algo_ = this->create_subscription<???>("???", 10, algo_callback);
         
         // send data to slave every 1s
@@ -78,12 +83,6 @@ public:
     }
 
 private:
-  rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
-  rclcpp::Subscription<serial_imu::msg::Euler_Angle>::SharedPtr uart_sub_euler_;
-  // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
-  // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
-
   int open_serial(void)
   {
     struct termios options;
@@ -111,52 +110,90 @@ private:
     return uart_fd_;
   }
 
+  void imuraw_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
+    // using info of x for testing purpose
+    temp_speed_current = msg->linear_acceleration.x;
+    temp_angular_speed_current = msg->angular_velocity.x; // in radian
+  }
+
+  void euler_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
+    temp_angle_current = msg->yaw_z; // in radian
+  }
+
   void timer_callback()
   {
-    uint8_t data[M2S_POCKET_SIZE]={0};
+    uint8_t data[M2S_POCKET_SIZE];
 
     // dummy data for testing
     float dummy_speed_target = 12.0f;
     float dummy_angle_target = 2.0f;
+    float dummy_angular_speed_target = 4.0f;
     float dummy_v_pump = 3.0f;
 
-    rs.angle_target = dummy_angle_target;
     rs.speed_target = dummy_speed_target;
-    rs.v_pump = dummy_v_pump;
+    rs.angle_target = dummy_angle_target;
+    rs.angular_speed_target = dummy_angular_speed_target;
+    rs.vacuum_voltage = dummy_v_pump;
+
+    rs.speed_current = temp_speed_current;
+    rs.angle_current = temp_angle_current;
+    rs.angular_speed_current = temp_angular_speed_current;
+
+    std::cout << "speed_target = " << rs.speed_target << std::endl;
+    std::cout << "speed_current = " << rs.speed_current << std::endl;
+    std::cout << "angle_target = " << rs.angle_target << std::endl;
+    std::cout << "angle_current = " << rs.angle_current << std::endl;
+    std::cout << "angular_speed_target = " << rs.angular_speed_target << std::endl;
+    std::cout << "angular_speed_current = " << rs.angular_speed_current << std::endl;
+    std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
 
     // prepare the pocket
-    data[BYTE_POS_M2S_STARTBIT] = START_BIT; 
-    data[BYTE_POS_M2S_VESTOP] = (rs.v_estop?) V_ESTOP_EN_CODE : V_ESTOP_DIS_CODE;
+    data[BYTE_POS_M2S_STARTBIT] = START_BIT;
+
+    if (rs.v_estop == true) data[BYTE_POS_M2S_VESTOP] = V_ESTOP_EN_CODE;
+    else data[BYTE_POS_M2S_VESTOP] = V_ESTOP_DIS_CODE;
+
     data[BYTE_POS_M2S_CONTROLMODE] = rs.control_mode; // fixed atm
+
     for (int i = BYTE_POS_M2S_TARGETSPEED; i < BYTE_POS_M2S_CURRENTSPEED; i++) {
       data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARGETSPEED);
     }
+
     for (int i = BYTE_POS_M2S_CURRENTSPEED; i < BYTE_POS_M2S_TARGETANGLE; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURRENTSPEED);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_current, i-BYTE_POS_M2S_CURRENTSPEED);
     }
+
     for (int i = BYTE_POS_M2S_TARGETANGLE; i < BYTE_POS_M2S_CURRENTANGLE; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARGETANGLE);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.angle_target, i-BYTE_POS_M2S_TARGETANGLE);
     }
+
     for (int i = BYTE_POS_M2S_CURRENTANGLE; i < BYTE_POS_M2S_TARANGSPEED; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURRENTANGLE);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.angle_current, i-BYTE_POS_M2S_CURRENTANGLE);
     }
+
     for (int i = BYTE_POS_M2S_TARANGSPEED; i < BYTE_POS_M2S_CURANGSPEED; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_TARANGSPEED);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.angular_speed_target, i-BYTE_POS_M2S_TARANGSPEED);
     }
+
     for (int i = BYTE_POS_M2S_CURANGSPEED; i < BYTE_POS_M2S_VACUUMVOLTAGE; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_CURANGSPEED);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.angular_speed_current, i-BYTE_POS_M2S_CURANGSPEED);
     }
+
     for (int i = BYTE_POS_M2S_VACUUMVOLTAGE; i < BYTE_POS_M2S_FOCMODE; i++) {
-      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.speed_target, i-BYTE_POS_M2S_VACUUMVOLTAGE);
+      data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.vacuum_voltage, i-BYTE_POS_M2S_VACUUMVOLTAGE);
     }
-    data[BYTE_POS_M2S_FOCMODE] = FOC_DIS_CODE; // FOCMode
+
+    if (rs.foc_engaged == true) data[BYTE_POS_M2S_FOCMODE] = FOC_EN_CODE;
+    else  data[BYTE_POS_M2S_FOCMODE] = FOC_DIS_CODE; // FOCMode
 
     uint8_t checksum = 0;
     // Calculate checksum
-    for (int i = 0; i < M2S_POCKET_SIZE - 1; i++) {
+    for (int i = 0; i < BYTE_POS_M2S_CHECKSUM; i++) {
         checksum += data[i];
     }
     data[BYTE_POS_M2S_CHECKSUM] = checksum;
+
+    data[BYTE_POS_M2S_ENDBIT] = END_BIT;
 
     // Write to Serial Port
     ssize_t bytes_written = write(uart_fd_, data, sizeof(data));
@@ -168,22 +205,13 @@ private:
     {
       RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
       // for debug: display the bytes
-      std::cout << "Bytes of the data: ";
+      std::cout << "Bytes of the data sent: ";
       for (int i = 0; i < M2S_POCKET_SIZE; i++)
       {
-        std::cout << std::hex << static_cast<int>(byteArray[i]) << " ";
+        std::cout << std::hex << static_cast<int>(data[i]) << " ";
       }
+      std::cout << std::endl;
     }
-  }
-
-  void imuraw_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
-    // using info of x for testing purpose
-    rs.speed_current = msg->linear_acceleration.x;
-    rs.angular_speed_current = msg->angular_velocity.x; // in radian
-  }
-
-  void euler_callback(const serial_imu::msg::Euler_Angle::SharedPtr msg){
-    rs.angle_current = msg->yaw_z; // in radian
   }
 
   // void imuprocessed_callback(const ??? msg){
@@ -198,6 +226,12 @@ private:
   //   // get virtual estop
   //   // get control mode
   // }
+
+  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
+  rclcpp::Subscription<serial_imu::msg::EulerAngle>::SharedPtr uart_sub_euler_;
+  // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
+  // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
 };
 
 int main(int argc, char * argv[])

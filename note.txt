@@ -3,13 +3,20 @@ FROM <BaseImage>
 
 sudo apt install nlohmann-json3-dev
 
+cd /usr/include
+sudo ln -sf eigen3/Eigen Eigen
+sudo ln -sf eigen3/unsupported unsupported
+
 cd /ros2_ws
 source /ros2_ws/install/setup.bash
 colcon build --packages-select serial_imu
 colcon build --packages-select uart_slave
+colcon build --packages-select imu_process // to be debugged
 
 ## to launch:
 ## ros2 launch serial_imu imu_spec_msg.launch.py
+## ros2 launch uart_slave uart_slave.launch.py
+## ros2 launch imu_process imu_processor.launch.py
 
 imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
 when at rest, 

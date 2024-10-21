@@ -32,7 +32,7 @@ static int decode(raw_t *raw)
     return parse_data(raw);
 }
 
-int serial_input(raw_t *raw, uint8_t *Rx_buffer, const int num_bytes)
+int serial_input(raw_t *raw, uint8_t* Rx_buffer, const int num_bytes)
 {
     // message is not yet received, i.e. not yet find the start bit
     if (raw->nbyte == 0){
@@ -56,6 +56,12 @@ int serial_input(raw_t *raw, uint8_t *Rx_buffer, const int num_bytes)
     // check if the message is complete / corrupted
     if (raw->len != S2M_POCKET_SIZE){
         printf("Length error\n");
+        raw->nbyte = 0; // reset the nbyte
+        return -1;
+    }
+    
+    if (raw->buf[raw->len] != END_BIT){
+        printf("End bit error\n");
         raw->nbyte = 0; // reset the nbyte
         return -1;
     }

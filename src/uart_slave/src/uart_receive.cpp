@@ -18,12 +18,13 @@
 
 #include "uart_slave/MasterSerialProtocol.hpp"
 #include "uart_slave/serial_receive.hpp"
+#include "uart_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 #define BAUD          (B115200)
-#define SLAVE_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
+#define IMU_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
 #define DEG_TO_RAD  (0.01745329)
 #ifdef __cplusplus
 }
@@ -42,7 +43,7 @@ public:
         : Node("Uart_receiver")
     {
         uart_fd_ = open_serial();
-        uart_pub_focangle_ = this->create_publisher<uart_slave::msg::FOC_Angle>("/FOC_angle", 10);
+        uart_pub_focangle_ = this->create_publisher<uart_slave::msg::FocAngle>("/FOC_angle", 10);
         timer_ = this->create_wall_timer(1000ms, std::bind(&UartReceiver::timer_callback, this));
     }
     ~UartReceiver()
@@ -54,23 +55,35 @@ public:
     }
 
 private:
-    rclcpp::Publisher<uart_slave::msg::FOC_Angle>::SharedPtr uart_pub_focangle_;
+    rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr uart_pub_focangle_;
     rclcpp::TimerBase::SharedPtr timer_;
+    
+    int num_bytes;
 
     void timer_callback(){
-        auto foc_angle = uart_slave::msg::FOC_Angle();
-        int num_bytes = read(fd, Rx_buffer, sizeof(Rx_buffer));
+        auto foc_angle = uart_slave::msg::FocAngle();
+        num_bytes = read(uart_fd_, Rx_buffer, sizeof(Rx_buffer));
         // now the data is in Rx_buffer
         // num_bytes is the number of bytes received
 
         // store the raw data into the raw struct
-        int rev = serial_input(&raw, &Rx_buffer, num_bytes);
+        int rev = serial_input(&raw, Rx_buffer, num_bytes);
 
         if (rev){
             // successfully decoded the data
             foc_angle.left = raw.foc_left;
             foc_angle.right = raw.foc_right;
             uart_pub_focangle_->publish(foc_angle);
+
+            std::cout << "Bytes of data received: ";
+            for (int i=0; i < S2M_POCKET_SIZE; i++)
+            {
+                std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
+            }
+            std::cout << std::endl;
+        }
+        else {
+            std::cout << "No data is received." << std::endl;
         }
 
         // for preparing to receive the next data
@@ -102,7 +115,7 @@ private:
 
 			return fd;
 		}
-}
+};
 
 int main(int argc, const char * argv[])
 {

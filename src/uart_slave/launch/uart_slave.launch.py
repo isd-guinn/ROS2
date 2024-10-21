@@ -9,6 +9,11 @@ def generate_launch_description():
             executable='sender',
             output='screen'
             ),
+        launch_ros.actions.Node(
+            package='uart_slave',
+            executable='receiver',
+            output='screen'
+            ),
         ])
 
 ## to launch:

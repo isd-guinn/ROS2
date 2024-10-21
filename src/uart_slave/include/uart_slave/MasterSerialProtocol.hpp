@@ -1,15 +1,17 @@
 #ifndef MASTERSERIALPROTOCOL_HPP 
 #define MASTERSERIALPROTOCOL_HPP
 
-#ifdef BIG_ENDIAN
-#define REINTERPRET_AS_FLOAT(x,y) (*(float*)(&x[y]))
-#define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+y))
-#endif
+// #ifdef BIG_ENDIAN
+// #define REINTERPRET_AS_FLOAT(x,y) (*(float*)(&x[y]))
+// #define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+y))
+// #endif
 
 #ifdef SMALL_ENDIAN
 #define REINTERPRET_AS_FLOAT(x,y) (*(float*)(&x[y]))
-#define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+(3-y)))
+#define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+(3-(y))))
 #endif
+
+#include <stdint.h>
 
 /*
   Packet from Master:
@@ -56,6 +58,8 @@
   31  |   FOCMode
 
   32  |   CheckSum
+
+  33  |   EndBit
 */
 
 /*
@@ -68,11 +72,13 @@
   03  |   RightFOCAngle
   
   04  |   CheckSum
+
+  05  |   EndBit
 */
 
 
-#define M2S_POCKET_SIZE   33
-#define S2M_POCKET_SIZE   5
+#define M2S_POCKET_SIZE   34
+#define S2M_POCKET_SIZE   6
 
 /*        Byte Position Macros        */
 #define BYTE_POS_M2S_STARTBIT        0
@@ -87,14 +93,17 @@
 #define BYTE_POS_M2S_VACUUMVOLTAGE  27
 #define BYTE_POS_M2S_FOCMODE        31
 #define BYTE_POS_M2S_CHECKSUM       32
+#define BYTE_POS_M2S_ENDBIT         33
 
 #define BYTE_POS_S2M_STARTBIT        0
 #define BYTE_POS_S2M_DEBUGCODE       1
 #define BYTE_POS_S2M_LEFTFOCANGLE    2
 #define BYTE_POS_S2M_RIGHTFOCANGLE   3
 #define BYTE_POS_S2M_CHECKSUM        4
+#define BYTE_POS_S2M_ENDBIT          5
 
 #define START_BIT         0x3E
+#define END_BIT           0x3F
 
 #define V_ESTOP_EN_CODE   0xA1
 #define V_ESTOP_DIS_CODE  0xA2
@@ -108,6 +117,6 @@ typedef uint8_t control_mode_t;
 #define FOC_DIS_CODE      0xB2
 
 typedef uint8_t debug_code_t;
-#define DEBUG_            0x01
+#define DEBUG_            0x00
 
 #endif
