@@ -41,33 +41,35 @@ int serial_input(raw_t *raw, uint8_t* Rx_buffer, const int num_bytes)
         raw->buf[0] = Rx_buffer[0];
         // check if there's any message
         if (raw->buf[0] != START_BIT){
+            printf("not start bit ;;");
             return 0; // no message
         }
         // have found the start bit
         raw->nbyte = 1;
-        return 0;
-    }
+        
+        // at here we should have already identified the start bit
+        // now start input the data into the raw struct's buffer
+        for (int i = 1; i < num_bytes; i++){
+            raw->buf[raw->nbyte++] = Rx_buffer[i];
+        }
 
-    // at here we should have already identified the start bit
-    // now start input the data into the raw struct's buffer
-    for (int i = 1; i < num_bytes; i++){
-        raw->buf[raw->nbyte++] = Rx_buffer[i];
-    }
+        // check if the message is complete / corrupted
+        if (raw->buf[raw->len-1] != END_BIT){
+            printf("End bit error\n");
+            raw->nbyte = 0; // reset the nbyte
+            return -1;
+        }
 
-    // check if the message is complete / corrupted
-    if (raw->len != C2M_PACKET_SIZE){
-        printf("Length error\n");
+        if (raw->nbyte != C2M_PACKET_SIZE-1){
+            printf("nbyte = %d", raw->nbyte);
+            printf("Length error\n");
+            raw->nbyte = 0; // reset the nbyte
+            return -1;
+        }   
+
         raw->nbyte = 0; // reset the nbyte
-        return -1;
+        return decode(raw);
     }
-
-    if (raw->buf[raw->len] != END_BIT){
-        printf("End bit error\n");
-        raw->nbyte = 0; // reset the nbyte
-        return -1;
-    }
-
-    // the message is complete, start decode
-    raw->nbyte = 0; // reset the nbyte
-    return decode(raw);
+    else 
+        return 0; // escape if raw.nbyte is not 0
 }

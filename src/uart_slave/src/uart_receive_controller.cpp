@@ -1,4 +1,4 @@
-CONTROLLER_SERIAL#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include <unistd.h>   // File IO
 #include <fcntl.h>    // File Control & Access Modes
@@ -18,7 +18,7 @@ CONTROLLER_SERIAL#include "rclcpp/rclcpp.hpp"
 
 #include "uart_slave/ControllerSerialProtocol.hpp"
 #include "uart_slave/serial_receive_controller.hpp"
-// #include "uart_slave/msg/foc_angle.hpp"
+#include "uart_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -38,7 +38,7 @@ class UartControllerReceiver : public rclcpp::Node
 {
 public:
     int uart_fd_ = 0;
-    uint8_t Rx_buffer[C2M_POCKET_SIZE] = {0};
+    uint8_t Rx_buffer[C2M_PACKET_SIZE] = {0};
     UartControllerReceiver()
         : Node("Uart_receiver_controller")
     {
@@ -59,10 +59,13 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     
     int num_bytes;
-
+    
     void timer_callback(){
         auto motor_voltage = uart_slave::msg::FocAngle();
         num_bytes = read(uart_fd_, Rx_buffer, sizeof(Rx_buffer));
+        // std::cout << "numbytes = " << num_bytes << std::endl;
+        raw.nbyte = 0;
+        raw.len = C2M_PACKET_SIZE;
         // now the data is in Rx_buffer
         // num_bytes is the number of bytes received
 
@@ -75,15 +78,17 @@ private:
             motor_voltage.right = raw.MotorVolt_R;
             uart_pub_motorvoltage_->publish(motor_voltage);
 
-            std::cout << "Bytes of data received: ";
+            std::cout << "Controller data received: ";
             for (int i=0; i < C2M_PACKET_SIZE; i++)
             {
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
             }
             std::cout << std::endl;
+            std::cout << std::endl;
         }
         else {
-            std::cout << "No data is received." << std::endl;
+            std::cout << "No data from Controller." << std::endl;
+            std::cout << std::endl;
         }
 
         // for preparing to receive the next data
@@ -97,6 +102,7 @@ private:
 			int fd = open(CONTROLLER_SERIAL, O_RDWR | O_NOCTTY);
 			if(fd == -1)
 			{
+                std::cout << "cannot open serial with controller." << std::endl;
 				perror("unable to open serial port");
 				exit(0);
 			}

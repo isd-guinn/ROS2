@@ -74,7 +74,9 @@ add_executable(receiver_controller
 ament_target_dependencies(receiver_controller 
                           rclcpp std_msgs)
 
-target_link_libraries(receiver receiver_controller "${cpp_typesupport_target}")
+target_link_libraries(sender "${cpp_typesupport_target}")
+target_link_libraries(receiver "${cpp_typesupport_target}")
+target_link_libraries(receiver_controller "${cpp_typesupport_target}")
 
 install(TARGETS 
         sender

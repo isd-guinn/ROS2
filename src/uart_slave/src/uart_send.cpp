@@ -125,7 +125,7 @@ private:
     temp_angle_current = msg->yaw_z; // in radian
   }
 
-  void motorvolt_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
+  void motorvolt_callback(const uart_slave::msg::FocAngle::SharedPtr msg){
     temp_motorvolt_left = msg->left; 
     temp_motorvolt_right = msg->right; 
   }
@@ -156,6 +156,7 @@ private:
     std::cout << "angular_speed_target = " << rs.angular_speed_target << std::endl;
     std::cout << "angular_speed_current = " << rs.angular_speed_current << std::endl;
     std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
+    std::cout << std::endl;
 
     // prepare the pocket
     data[BYTE_POS_M2S_STARTBIT] = START_BIT;
@@ -240,6 +241,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
   rclcpp::Subscription<serial_imu::msg::EulerAngle>::SharedPtr uart_sub_euler_;
+  rclcpp::Subscription<uart_slave::msg::FocAngle>::SharedPtr uart_sub_motorvolt_;
   // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
   // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
 };
