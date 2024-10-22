@@ -13,22 +13,22 @@
 
 #include <stdint.h>
 
-// namespace ByteUtil
-// {
-//   inline float reconFloat(uint8_t *packet, uint8_t pos, bool isSmallEndian = true)
-//   {
-//     if (isSmallEndian)
-//     {
-//       uint8_t ctn[4] = {packet[pos+3], packet[pos+2], packet[pos+1], packet[pos]};
-//       return *(float*)&ctn;
-//     }
-//     else
-//     {
-//       uint8_t ctn[4] = {packet[pos], packet[pos+1], packet[pos+2], packet[pos+3]};
-//       return *(float*)&ctn;
-//     }              
-//   }
-// }
+namespace ByteUtil
+{
+  inline float reconFloat(uint8_t *packet, uint8_t pos, bool isSmallEndian = true)
+  {
+    if (isSmallEndian)
+    {
+      uint8_t ctn[4] = {packet[pos+3], packet[pos+2], packet[pos+1], packet[pos]};
+      return *(float*)&ctn;
+    }
+    else
+    {
+      uint8_t ctn[4] = {packet[pos], packet[pos+1], packet[pos+2], packet[pos+3]};
+      return *(float*)&ctn;
+    }              
+  }
+}
 
 /*  Packet from Controller:
   

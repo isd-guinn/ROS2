@@ -63,8 +63,9 @@ private:
     void timer_callback(){
         auto motor_voltage = uart_slave::msg::FocAngle();
         raw.nbyte = 0;
+        num_bytes = 0;
+        uint8_t first_bit[1] = {0};
 
-        uint8_t first_bit[1];
         // check the bytes one by one until get the start bit
         while (first_bit[0] != START_BIT)
         {
@@ -79,16 +80,7 @@ private:
 
         // read the rest of the data
         num_bytes += read(uart_fd_, &Rx_buffer[1], C2M_PACKET_SIZE-1);
-
-        // uint8_t rest_bytes[C2M_PACKET_SIZE-1];
-        // // read the rest of the data
-        // num_bytes += read(uart_fd_, rest_bytes, C2M_PACKET_SIZE-1);
-        // // num_bytes now is the number of bytes received  e.g. 14
-        // for (int i = 1; i < C2M_PACKET_SIZE; i++)
-        // {
-        //     Rx_buffer[i] = rest_bytes[i-1];
-        // }
-        std::cout << "num_bytes after read: " << num_bytes << std::endl;
+        // std::cout << std::dec << "num_bytes after read: " << num_bytes << std::endl;
 
         // store the raw data into the raw struct
         int rev = serial_input(&raw, Rx_buffer, num_bytes);
@@ -106,12 +98,11 @@ private:
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
             }
             std::cout << std::endl;
-            std::cout << "-------------------------------------" << std::endl;
         }
         else {
             std::cout << "No data from Controller." << std::endl;
-            std::cout << "-------------------------------------" << std::endl;
         }
+        std::cout << "-------------------------------------" << std::endl;
 
         // for preparing to receive the next data
 		memset(Rx_buffer,0,sizeof(Rx_buffer));
@@ -124,8 +115,8 @@ private:
 			int fd = open(CONTROLLER_SERIAL, O_RDWR | O_NOCTTY);
 			if(fd == -1)
 			{
-                std::cout << "cannot open serial with controller." << std::endl;
-				perror("unable to open serial port");
+                std::cout   << "cannot open controller serial port: " 
+                            << CONTROLLER_SERIAL << std::endl;
 				exit(0);
 			}
 			

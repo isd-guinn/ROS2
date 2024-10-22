@@ -26,7 +26,7 @@
 extern "C"{
 #endif
 #define BAUD          (B115200)
-#define IMU_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
+#define SLAVE_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
 #define DEG_TO_RAD  (0.01745329)
 #ifdef __cplusplus
 }
@@ -64,9 +64,25 @@ private:
 
     void timer_callback(){
         auto foc_angle = uart_slave::msg::FocAngle();
-        num_bytes = read(uart_fd_, Rx_buffer, sizeof(Rx_buffer));
-        // now the data is in Rx_buffer
-        // num_bytes is the number of bytes received
+        raw.nbyte = 0;
+        num_bytes = 0;
+        uint8_t first_bit[1] = {0};
+
+        // check the bytes one by one until get the start bit
+        while (first_bit[0] != START_BIT)
+        {
+            num_bytes = read(uart_fd_, first_bit, 1); // here num_bytes should = 1
+            if (num_bytes != 1)
+            {
+                std::cout << "Error: Cannot read the first bit." << std::endl;
+                return;
+            }
+        }
+        Rx_buffer[0] = first_bit[0];
+
+        // read the rest of the data
+        num_bytes += read(uart_fd_, &Rx_buffer[1], S2M_PACKET_SIZE-1);
+        // std::cout << std::dec << "num_bytes after read: " << num_bytes << std::endl;
 
         // store the raw data into the raw struct
         int rev = serial_input(&raw, Rx_buffer, num_bytes);
@@ -77,7 +93,7 @@ private:
             foc_angle.right = raw.foc_right;
             uart_pub_focangle_->publish(foc_angle);
 
-            std::cout << "Bytes of data received: ";
+            std::cout << "Slave data received: ";
             for (int i=0; i < S2M_PACKET_SIZE; i++)
             {
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
@@ -87,6 +103,7 @@ private:
         else {
             std::cout << "No data is received." << std::endl;
         }
+        std::cout << "-------------------------------------" << std::endl;
 
         // for preparing to receive the next data
 		memset(Rx_buffer,0,sizeof(Rx_buffer));
@@ -96,10 +113,11 @@ private:
 		{
 			struct termios options;
 
-			int fd = open(IMU_SERIAL, O_RDWR | O_NOCTTY);
+			int fd = open(SLAVE_SERIAL, O_RDWR | O_NOCTTY);
 			if(fd == -1)
 			{
-				perror("unable to open serial port");
+				std::cout   << "cannot open slave serial port: " 
+                            << SLAVE_SERIAL << std::endl;
 				exit(0);
 			}
 			

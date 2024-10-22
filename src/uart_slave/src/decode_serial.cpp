@@ -9,15 +9,15 @@
 static int parse_data(S2Mraw_t *raw)
 {
     raw->debug_code = raw->buf[BYTE_POS_S2M_DEBUGCODE];
-    raw->foc_left = REINTERPRET_AS_FLOAT(raw->buf, BYTE_POS_S2M_LEFTFOCANGLE);
-    raw->foc_right = REINTERPRET_AS_FLOAT(raw->buf, BYTE_POS_S2M_RIGHTFOCANGLE);
+    raw->foc_left = ByteUtil::reconFloat(raw->buf, BYTE_POS_S2M_LEFTFOCANGLE);
+    raw->foc_right = ByteUtil::reconFloat(raw->buf, BYTE_POS_S2M_RIGHTFOCANGLE);
     return 1; // parsed successfully
 }
 
 static int parse_data(C2Mraw_t *raw)
 {
-    raw->MotorVolt_L = REINTERPRET_AS_FLOAT(raw->buf, BYTE_POS_C2M_LWHEELVOLTAGE);
-    raw->MotorVolt_R = REINTERPRET_AS_FLOAT(raw->buf, BYTE_POS_C2M_RWHEELVOLTAGE);
+    raw->MotorVolt_L = ByteUtil::reconFloat(raw->buf, BYTE_POS_C2M_LWHEELVOLTAGE);
+    raw->MotorVolt_R = ByteUtil::reconFloat(raw->buf, BYTE_POS_C2M_RWHEELVOLTAGE);
     return 1; // parsed successfully
 }
 
@@ -28,9 +28,7 @@ int serial_input(S2Mraw_t *raw, uint8_t *Rx_buffer, const int num_bytes)
     for (int i = 1; i < num_bytes; i++){
         raw->buf[raw->nbyte++] = Rx_buffer[i];
     }
-    
-    // nbyte should be equal to num_bytes aka C2M_PACKET_SIZE
-    printf("nbyte = %d\n", raw->nbyte);
+    // printf("nbyte = %d\n", raw->nbyte); // shd be equal to num_bytes aka S2M_PACKET_SIZE
 
     // check if the message is complete / corrupted
     if (raw->buf[raw->nbyte - 1] != END_BIT) // buf[13]
@@ -68,11 +66,10 @@ int serial_input(C2Mraw_t *raw, uint8_t *Rx_buffer, const int num_bytes)
     // store the bytes into the raw struct
     raw->buf[raw->nbyte++] = Rx_buffer[0]; // store the first byte into the raw struct's buffer
     for (int i = 1; i < num_bytes; i++){
-        raw->buf[raw->nbyte++] = Rx_buffer[i];
+        raw->buf[raw->nbyte] = Rx_buffer[i];
+        raw->nbyte++;
     }
-    
-    // nbyte should be equal to num_bytes aka C2M_PACKET_SIZE
-    printf("nbyte = %d\n", raw->nbyte);
+    // printf("nbyte = %d\n", raw->nbyte); // shd be equal to num_bytes aka C2M_PACKET_SIZE
 
     // check if the message is complete / corrupted
     if (raw->buf[raw->nbyte - 1] != END_BIT) // buf[13]
