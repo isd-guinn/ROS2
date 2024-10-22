@@ -19,6 +19,7 @@
 
 #include "uart_slave/MasterSerialProtocol.hpp"
 #include "serial_imu/msg/euler_angle.hpp"
+#include "uart_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -36,27 +37,29 @@ using namespace std;
 
 
 // Store all the required states for updates the modules
+// all angle in radian
 struct RobotState
 { 
   bool v_estop;
   control_mode_t control_mode;
-  float speed_target;
+  float speed_target; // motor voltage Left
   float speed_current;
-  float angle_target;   // pass radian
-  float angle_current;  // pass radian
+  float angle_target; // motor voltage Right
+  float angle_current;  
   float angular_speed_target;
   float angular_speed_current;
   float vacuum_voltage;
   bool foc_engaged;
 };
 
-struct RobotState rs{ false, NULL_CONTROL, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false };
+struct RobotState rs{ false, MANUAL_CONTROL, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false };
 
 class UartPublisher : public rclcpp::Node
 {
 public:
     int uart_fd_ = 0;
     float temp_speed_current, temp_angle_current, temp_angular_speed_current = 0;
+    float temp_motorvolt_left, temp_motorvolt_right = 0;
 
     UartPublisher()
         : Node("Uart_sender")
@@ -67,6 +70,8 @@ public:
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
         uart_sub_euler_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, 
                           std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
+        uart_sub_motorvolt_ = this->create_subscription<uart_slave::msg::FocAngle>("Motor_voltage", 10, 
+                          std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
         // uart_sub_algo_ = this->create_subscription<???>("???", 10, algo_callback);
         
         // send data to slave every 1s
@@ -120,18 +125,23 @@ private:
     temp_angle_current = msg->yaw_z; // in radian
   }
 
+  void motorvolt_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
+    temp_motorvolt_left = msg->left; 
+    temp_motorvolt_right = msg->right; 
+  }
+
   void timer_callback()
   {
     uint8_t data[M2S_POCKET_SIZE];
 
     // dummy data for testing
-    float dummy_speed_target = 12.0f;
-    float dummy_angle_target = 2.0f;
+    // float dummy_speed_target = 12.0f;
+    // float dummy_angle_target = 2.0f;
     float dummy_angular_speed_target = 4.0f;
     float dummy_v_pump = 3.0f;
 
-    rs.speed_target = dummy_speed_target;
-    rs.angle_target = dummy_angle_target;
+    rs.speed_target = temp_motorvolt_left;
+    rs.angle_target = temp_motorvolt_right;
     rs.angular_speed_target = dummy_angular_speed_target;
     rs.vacuum_voltage = dummy_v_pump;
 

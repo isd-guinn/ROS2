@@ -65,15 +65,21 @@ ament_target_dependencies(sender
                           rclcpp std_msgs serial_imu sensor_msgs)
 
 add_executable(receiver 
-               src/uart_receive.cpp src/proc_serial_input.cpp)
+               src/uart_receive.cpp src/serial_input.cpp)
 ament_target_dependencies(receiver 
                           rclcpp std_msgs)
 
-target_link_libraries(receiver "${cpp_typesupport_target}")
+add_executable(receiver_controller 
+               src/uart_receive_controller.cpp src/serial_input_controller.cpp)
+ament_target_dependencies(receiver_controller 
+                          rclcpp std_msgs)
+
+target_link_libraries(receiver receiver_controller "${cpp_typesupport_target}")
 
 install(TARGETS 
         sender
-        receiver  
+        receiver
+        receiver_controller  
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 

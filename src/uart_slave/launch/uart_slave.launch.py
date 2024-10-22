@@ -14,6 +14,11 @@ def generate_launch_description():
             executable='receiver',
             output='screen'
             ),
+        launch_ros.actions.Node(
+            package='uart_slave',
+            executable='receiver_controller',
+            output='screen'
+            ),
         ])
 
 ## to launch:

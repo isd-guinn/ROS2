@@ -59,7 +59,7 @@ int serial_input(raw_t *raw, uint8_t* Rx_buffer, const int num_bytes)
         raw->nbyte = 0; // reset the nbyte
         return -1;
     }
-    
+
     if (raw->buf[raw->len] != END_BIT){
         printf("End bit error\n");
         raw->nbyte = 0; // reset the nbyte
