@@ -6,17 +6,17 @@ def generate_launch_description():
     return LaunchDescription([
         launch_ros.actions.Node(
             package='uart_slave',
-            executable='sender',
+            executable='m2s_sender',
             output='screen'
             ),
         launch_ros.actions.Node(
             package='uart_slave',
-            executable='receiver',
+            executable='s2m_receiver',
             output='screen'
             ),
         launch_ros.actions.Node(
             package='uart_slave',
-            executable='receiver_controller',
+            executable='c2m_receiver',
             output='screen'
             ),
         ])

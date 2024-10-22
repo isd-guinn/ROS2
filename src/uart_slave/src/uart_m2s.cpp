@@ -132,7 +132,7 @@ private:
 
   void timer_callback()
   {
-    uint8_t data[M2S_POCKET_SIZE];
+    uint8_t data[M2S_PACKET_SIZE];
 
     // dummy data for testing
     // float dummy_speed_target = 12.0f;
@@ -158,7 +158,7 @@ private:
     std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
     std::cout << std::endl;
 
-    // prepare the pocket
+    // prepare the PACKET
     data[BYTE_POS_M2S_STARTBIT] = START_BIT;
 
     if (rs.v_estop == true) data[BYTE_POS_M2S_VESTOP] = V_ESTOP_EN_CODE;
@@ -217,10 +217,11 @@ private:
       RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
       // for debug: display the bytes
       std::cout << "Bytes of the data sent: ";
-      for (int i = 0; i < M2S_POCKET_SIZE; i++)
+      for (int i = 0; i < M2S_PACKET_SIZE; i++)
       {
         std::cout << std::hex << static_cast<int>(data[i]) << " ";
       }
+      std::cout << std::endl;
       std::cout << std::endl;
     }
   }

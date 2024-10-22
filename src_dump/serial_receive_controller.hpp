@@ -7,7 +7,6 @@
 typedef struct
 {
     int nbyte;                          /* number of bytes in message buffer */ 
-    int len;                            /* message length (bytes) */
     uint8_t buf[C2M_PACKET_SIZE];       /* message raw buffer */
     
     // uint8_t debug_code;                    /* debug code */

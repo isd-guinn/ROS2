@@ -17,7 +17,7 @@
 // #define BIG_ENDIAN
 
 #include "uart_slave/ControllerSerialProtocol.hpp"
-#include "uart_slave/serial_receive_controller.hpp"
+#include "uart_slave/serial_receive.hpp"
 #include "uart_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
@@ -32,7 +32,7 @@ extern "C"{
 
 using namespace std::chrono_literals;
 using namespace std;
-static raw_t raw; // struct for storing the raw data from the serial port
+static C2Mraw_t raw; // struct for storing the raw data from the serial port
 
 class UartControllerReceiver : public rclcpp::Node
 {
@@ -62,16 +62,38 @@ private:
     
     void timer_callback(){
         auto motor_voltage = uart_slave::msg::FocAngle();
-        num_bytes = read(uart_fd_, Rx_buffer, sizeof(Rx_buffer));
-        // std::cout << "numbytes = " << num_bytes << std::endl;
         raw.nbyte = 0;
-        raw.len = C2M_PACKET_SIZE;
-        // now the data is in Rx_buffer
-        // num_bytes is the number of bytes received
+
+        uint8_t first_bit[1];
+        // check the bytes one by one until get the start bit
+        while (first_bit[0] != START_BIT)
+        {
+            num_bytes = read(uart_fd_, first_bit, 1); // here num_bytes should = 1
+            if (num_bytes != 1)
+            {
+                std::cout << "Error: Cannot read the first bit." << std::endl;
+                return;
+            }
+        }
+        Rx_buffer[0] = first_bit[0];
+
+        // read the rest of the data
+        num_bytes += read(uart_fd_, &Rx_buffer[1], C2M_PACKET_SIZE-1);
+
+        // uint8_t rest_bytes[C2M_PACKET_SIZE-1];
+        // // read the rest of the data
+        // num_bytes += read(uart_fd_, rest_bytes, C2M_PACKET_SIZE-1);
+        // // num_bytes now is the number of bytes received  e.g. 14
+        // for (int i = 1; i < C2M_PACKET_SIZE; i++)
+        // {
+        //     Rx_buffer[i] = rest_bytes[i-1];
+        // }
+        std::cout << "num_bytes after read: " << num_bytes << std::endl;
 
         // store the raw data into the raw struct
         int rev = serial_input(&raw, Rx_buffer, num_bytes);
-
+        
+        // rev = 1 means the data is successfully decoded
         if (rev){
             // successfully decoded the data
             motor_voltage.left = raw.MotorVolt_L;
@@ -84,11 +106,11 @@ private:
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
             }
             std::cout << std::endl;
-            std::cout << std::endl;
+            std::cout << "-------------------------------------" << std::endl;
         }
         else {
             std::cout << "No data from Controller." << std::endl;
-            std::cout << std::endl;
+            std::cout << "-------------------------------------" << std::endl;
         }
 
         // for preparing to receive the next data

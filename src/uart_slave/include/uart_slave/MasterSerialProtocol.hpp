@@ -77,8 +77,8 @@
 */
 
 
-#define M2S_POCKET_SIZE   34
-#define S2M_POCKET_SIZE   6
+#define M2S_PACKET_SIZE   34
+#define S2M_PACKET_SIZE   6
 
 /*        Byte Position Macros        */
 #define BYTE_POS_M2S_STARTBIT        0

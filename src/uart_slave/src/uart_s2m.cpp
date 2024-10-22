@@ -1,3 +1,5 @@
+// logic to be updated
+
 #include "rclcpp/rclcpp.hpp"
 
 #include <unistd.h>   // File IO
@@ -32,13 +34,13 @@ extern "C"{
 
 using namespace std::chrono_literals;
 using namespace std;
-static raw_t raw; // struct for storing the raw data from the serial port
+static S2Mraw_t raw; // struct for storing the raw data from the serial port
 
 class UartReceiver : public rclcpp::Node
 {
 public:
     int uart_fd_ = 0;
-    uint8_t Rx_buffer[S2M_POCKET_SIZE] = {0};
+    uint8_t Rx_buffer[S2M_PACKET_SIZE] = {0};
     UartReceiver()
         : Node("Uart_receiver")
     {
@@ -76,7 +78,7 @@ private:
             uart_pub_focangle_->publish(foc_angle);
 
             std::cout << "Bytes of data received: ";
-            for (int i=0; i < S2M_POCKET_SIZE; i++)
+            for (int i=0; i < S2M_PACKET_SIZE; i++)
             {
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
             }

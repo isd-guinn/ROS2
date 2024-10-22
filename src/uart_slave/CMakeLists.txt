@@ -58,30 +58,29 @@ include_directories(
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-# to be updated
-add_executable(sender 
-               src/uart_send.cpp)
-ament_target_dependencies(sender 
+# to be updated !!!!
+add_executable(m2s_sender 
+               src/uart_m2s.cpp)
+ament_target_dependencies(m2s_sender 
                           rclcpp std_msgs serial_imu sensor_msgs)
+target_link_libraries(m2s_sender "${cpp_typesupport_target}")
 
-add_executable(receiver 
-               src/uart_receive.cpp src/serial_input.cpp)
-ament_target_dependencies(receiver 
+add_executable(s2m_receiver 
+               src/uart_s2m.cpp src/decode_serial.cpp)
+ament_target_dependencies(s2m_receiver 
                           rclcpp std_msgs)
+target_link_libraries(s2m_receiver "${cpp_typesupport_target}")
 
-add_executable(receiver_controller 
-               src/uart_receive_controller.cpp src/serial_input_controller.cpp)
-ament_target_dependencies(receiver_controller 
+add_executable(c2m_receiver
+               src/uart_c2m.cpp src/decode_serial.cpp)
+ament_target_dependencies(c2m_receiver 
                           rclcpp std_msgs)
-
-target_link_libraries(sender "${cpp_typesupport_target}")
-target_link_libraries(receiver "${cpp_typesupport_target}")
-target_link_libraries(receiver_controller "${cpp_typesupport_target}")
+target_link_libraries(c2m_receiver "${cpp_typesupport_target}")
 
 install(TARGETS 
-        sender
-        receiver
-        receiver_controller  
+        m2s_sender
+        s2m_receiver
+        c2m_receiver  
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
