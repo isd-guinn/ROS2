@@ -21,10 +21,19 @@ find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-# for the new message type
+find_package(serial_imu REQUIRED)
+find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+
+ament_export_dependencies(rosidl_default_runtime)
+
+set(msg_files
+"msg/Position.msg"
+)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Position.msg"
+  ${msg_files}
+  DEPENDENCIES std_msgs builtin_interfaces
 )
 
 if(BUILD_TESTING)
@@ -39,10 +48,22 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+###########
+## Build ##
+###########
+
+include_directories(
+  include
+)
+
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp)
+
 add_executable( processor 
-                src/imu_process.cpp src/header.cpp)
+                src/imu_process.cpp src/manipulate.cpp)
 ament_target_dependencies(processor 
-                          rclcpp std_msgs sensor_msgs)
+                          rclcpp std_msgs sensor_msgs serial_imu)
+target_link_libraries(processor "${cpp_typesupport_target}")
 
 install(TARGETS 
         processor  
