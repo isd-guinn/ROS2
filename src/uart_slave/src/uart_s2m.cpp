@@ -66,16 +66,24 @@ private:
         auto foc_angle = uart_slave::msg::FocAngle();
         raw.nbyte = 0;
         num_bytes = 0;
+        
         uint8_t first_bit[1] = {0};
 
         // check the bytes one by one until get the start bit
         while (first_bit[0] != START_BIT)
         {
+            // std::cout << "last first_bit = " << std::hex << first_bit[0] << std::endl;
             num_bytes = read(uart_fd_, first_bit, 1); // here num_bytes should = 1
-            if (num_bytes != 1)
+            while (num_bytes != 1)
             {
-                std::cout << "Error: Cannot read the first bit." << std::endl;
-                return;
+                if (num_bytes == 0){
+                    // std::cout << std::dec << uart_fd_ << std::endl;
+                    std::cout << "Controller: No data available." << std::endl;
+                }
+                else {
+                    std::cout << "Controller Error!!!!!!!" << std::endl;
+                }
+                return; 
             }
         }
         Rx_buffer[0] = first_bit[0];
