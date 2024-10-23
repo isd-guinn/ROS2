@@ -35,7 +35,6 @@ extern "C"{
 using namespace std::chrono_literals;
 using namespace std;
 
-
 // Store all the required states for updates the modules
 // all angle in radian
 struct RobotState
@@ -64,7 +63,7 @@ public:
     UartPublisher()
         : Node("Uart_sender")
     {
-        uart_fd_ = open_serial();
+        // uart_fd_ = open_serial();
         uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, 
                             std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
@@ -75,17 +74,16 @@ public:
         // uart_sub_algo_ = this->create_subscription<???>("???", 10, algo_callback);
         
         // send data to slave every 1s
-        timer_ = this->create_wall_timer(
-            1000ms, std::bind(&UartPublisher::timer_callback, this));
+        timer_ = this->create_wall_timer(100ms, std::bind(&UartPublisher::timer_callback, this));
     }
 
-    ~UartPublisher() // destructor
-    {
-        if (uart_fd_ != -1)
-        {
-            close(uart_fd_);
-        }
-    }
+    // ~UartPublisher() // destructor
+    // {
+    //     if (uart_fd_ != -1)
+    //     {
+    //         close(uart_fd_);
+    //     }
+    // }
 
 private:
   int open_serial(void)
@@ -133,6 +131,7 @@ private:
   void timer_callback()
   {
     uint8_t data[M2S_PACKET_SIZE];
+    uart_fd_ = open_serial();
 
     // dummy data for testing
     // float dummy_speed_target = 12.0f;
@@ -216,13 +215,13 @@ private:
     {
       RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
       // for debug: display the bytes
-      std::cout << "Bytes of the data sent: ";
+      std::cout << "Bytes of the data sent: " << std::endl;
       for (int i = 0; i < M2S_PACKET_SIZE; i++)
       {
         std::cout << std::hex << static_cast<int>(data[i]) << " ";
       }
       std::cout << std::endl;
-      std::cout << std::endl;
+      std::cout << "---------------------------------------" << std::endl;
     }
   }
 

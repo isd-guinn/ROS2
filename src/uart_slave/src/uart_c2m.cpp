@@ -25,6 +25,7 @@ extern "C"{
 #endif
 #define BAUD                (B115200)
 #define CONTROLLER_SERIAL   ("/dev/ttyACM0")
+#define CONTROLLER_SERIAL_2 ("/dev/ttyACM1")
 #define DEG_TO_RAD          (0.01745329)
 #ifdef __cplusplus
 }
@@ -39,12 +40,15 @@ class UartControllerReceiver : public rclcpp::Node
 public:
     int uart_fd_ = 0;
     uint8_t Rx_buffer[C2M_PACKET_SIZE] = {0};
+    int freq_adjust = 1;
+
     UartControllerReceiver()
         : Node("Uart_receiver_controller")
     {
         uart_fd_ = open_serial();
         uart_pub_motorvoltage_ = this->create_publisher<uart_slave::msg::FocAngle>("/Motor_voltage", 10);
-        timer_ = this->create_wall_timer(1000ms, std::bind(&UartControllerReceiver::timer_callback, this));
+        // same frequency required?
+        timer_ = this->create_wall_timer(100ms, std::bind(&UartControllerReceiver::timer_callback, this));
     }
     ~UartControllerReceiver()
     {
@@ -59,24 +63,42 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     
     int num_bytes;
-    
+
     void timer_callback(){
         auto motor_voltage = uart_slave::msg::FocAngle();
         raw.nbyte = 0;
         num_bytes = 0;
+
+        // /*
         uint8_t first_bit[1] = {0};
 
         // check the bytes one by one until get the start bit
         while (first_bit[0] != START_BIT)
         {
+            // std::cout << "last first_bit = " << std::hex << first_bit[0] << std::endl;
             num_bytes = read(uart_fd_, first_bit, 1); // here num_bytes should = 1
-            if (num_bytes != 1)
+            while (num_bytes != 1)
             {
-                std::cout << "Error: Cannot read the first bit." << std::endl;
-                return;
+                if (num_bytes == 0){
+                    // std::cout << std::dec << uart_fd_ << std::endl;
+                    std::cout << "Controller: No data available." << std::endl;
+                }
+                else {
+                    std::cout << "Controller Error!!!!!!!" << std::endl;
+                }
+                return; 
             }
         }
         Rx_buffer[0] = first_bit[0];
+        // */
+
+        /*
+        if (check_start(uart_fd_) == true){
+            num_bytes = 1;
+            Rx_buffer[0] = START_BIT;
+        }
+        else return;
+        // */
 
         // read the rest of the data
         num_bytes += read(uart_fd_, &Rx_buffer[1], C2M_PACKET_SIZE-1);
@@ -98,6 +120,10 @@ private:
                 std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
             }
             std::cout << std::endl;
+
+            std::cout << "Controller Decoded Data: " << std::endl;
+            std::cout << "motor voltage left = " << raw.MotorVolt_L << std::endl;
+            std::cout << "motor voltage right = " << raw.MotorVolt_R << std::endl;
         }
         else {
             std::cout << "No data from Controller." << std::endl;
@@ -112,12 +138,20 @@ private:
 		{
 			struct termios options;
 
-			int fd = open(CONTROLLER_SERIAL, O_RDWR | O_NOCTTY);
+			int fd;
+            fd = open(CONTROLLER_SERIAL, O_RDWR | O_NOCTTY);
 			if(fd == -1)
 			{
                 std::cout   << "cannot open controller serial port: " 
                             << CONTROLLER_SERIAL << std::endl;
-				exit(0);
+
+                fd = open(CONTROLLER_SERIAL_2, O_RDWR | O_NOCTTY);
+                if (fd == -1)
+                {
+                    std::cout << "cannot open controller serial port: "
+                              << CONTROLLER_SERIAL_2 << std::endl;
+                    exit(0);    
+                }
 			}
 			
             tcgetattr(uart_fd_, &options);

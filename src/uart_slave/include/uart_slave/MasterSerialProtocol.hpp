@@ -2,31 +2,14 @@
 #define MASTERSERIALPROTOCOL_HPP
 
 // #ifdef BIG_ENDIAN
-// #define REINTERPRET_AS_FLOAT(x,y) (*(float*)(&x[y]))
+// #define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+y))
 // #endif
 
 #ifdef SMALL_ENDIAN
-#define REINTERPRET_AS_FLOAT(x,y) (*(float*)(&x[y]))
+#define EXTRACT_BYTE_FROM_4BYTE_VALUE(x,y) (*((uint8_t*)(&x)+(3-(y))))
 #endif
 
 #include <stdint.h>
-
-namespace ByteUtil
-{
-  inline float reconFloat(uint8_t *packet, uint8_t pos, bool isSmallEndian = true)
-  {
-    if (isSmallEndian)
-    {
-      uint8_t ctn[4] = {packet[pos+3], packet[pos+2], packet[pos+1], packet[pos]};
-      return *(float*)&ctn;
-    }
-    else
-    {
-      uint8_t ctn[4] = {packet[pos], packet[pos+1], packet[pos+2], packet[pos+3]};
-      return *(float*)&ctn;
-    }
-  }
-}
 
 
 /*

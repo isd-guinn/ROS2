@@ -4,7 +4,37 @@
 #include "uart_slave/MasterSerialProtocol.hpp"
 #include "uart_slave/ControllerSerialProtocol.hpp"
 #include "uart_slave/serial_receive.hpp"
+
+#include <unistd.h>
 #include <stdio.h>
+#include <iostream>
+#include <iomanip>
+
+// /*
+bool check_start(const int uart_fd_)
+{
+    static uint8_t first_bit[1] = {0};
+    static int n = 0;
+
+    while (first_bit[0] != START_BIT)
+        {
+            // std::cout << "last first_bit = " << std::hex << first_bit[0] << std::endl;
+            n = read(uart_fd_, first_bit, 1); // here n should = 1
+            while (n != 1)
+            {
+                if (n == 0){
+                    // std::cout << std::dec << uart_fd_ << std::endl;
+                    std::cout << "Controller: No data available." << std::endl;
+                }
+                else {
+                    std::cout << "Controller Error!!!!!!!" << std::endl;
+                }
+                return false; 
+            }
+        }
+    return true;
+}
+// */
 
 static int parse_data(S2Mraw_t *raw)
 {
