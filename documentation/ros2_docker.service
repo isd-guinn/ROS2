@@ -1,6 +1,3 @@
-# this file is NOT suppose to be used HERE. #
-# this is named as "ros2_docker.service" and is located at /etc/systemd/system #
-
 [Unit]
 Description=Start ROS 2 Docker Compose for all the nodes
 After=network-online.target
