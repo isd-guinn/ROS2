@@ -2,24 +2,34 @@
 #define HEADER_HPP
 
 #include <stdint.h>
-#include <Eigen/Dense>
+// #include <Eigen/Dense>
 
 #define DEG_TO_RAD  (0.01745329)
 
+typedef struct {
+    float x;
+    float y;
+    float z;
+} vector_t;
+
 typedef struct
 {
-    float pos_x = 0.0f; 
-    float pos_y = 0.0f; 
-    float pos_z = 0.0f; 
-    float vel_x;
-    float vel_y;
-    float vel_z;
-    float acc_x_current;
-    float acc_y_current;
-    float acc_z_current;
-    float acc_x_previous;
-    float acc_y_previous;
-    float acc_z_previous;
+    vector_t pos = {0.0f, 0.0f, 0.0f};
+    vector_t vel;
+    vector_t acc_current;
+    vector_t acc_prev;
+    // float pos_x = 0.0f; 
+    // float pos_y = 0.0f; 
+    // float pos_z = 0.0f; 
+    // float vel_x;
+    // float vel_y;
+    // float vel_z;
+    // float acc_x_current;
+    // float acc_y_current;
+    // float acc_z_current;
+    // float acc_x_previous;
+    // float acc_y_previous;
+    // float acc_z_previous;
 
     float angle_z = 0.0f; // z-axis
     float angVel_z_current;

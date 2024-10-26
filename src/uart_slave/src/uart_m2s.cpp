@@ -1,5 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include <sensor_msgs/msg/imu.hpp>
+#include "std_msgs/msg/u_int8.hpp"
 
 #include <unistd.h>   // File IO
 #include <fcntl.h>    // File Control & Access Modes
@@ -48,10 +49,11 @@ struct RobotState
   float angular_speed_target;
   float angular_speed_current;
   float vacuum_voltage;
-  bool foc_engaged;
+  action_t action;
+  bool  foc_engaged;
 };
 
-struct RobotState rs{ false, MANUAL_CONTROL, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false };
+struct RobotState rs{ false, MANUAL_CONTROL, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, STOP, false };
 
 class UartPublisher : public rclcpp::Node
 {
@@ -59,31 +61,21 @@ public:
     int uart_fd_ = 0;
     float temp_speed_current, temp_angle_current, temp_angular_speed_current = 0;
     float temp_motorvolt_left, temp_motorvolt_right = 0;
+    action_t temp_action = STOP;
 
     UartPublisher()
         : Node("Uart_sender")
     {
         // uart_fd_ = open_serial();
-        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, 
-                            std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
+        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
-        uart_sub_euler_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, 
-                          std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
-        uart_sub_motorvolt_ = this->create_subscription<uart_slave::msg::FocAngle>("Motor_voltage", 10, 
-                          std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
-        // uart_sub_algo_ = this->create_subscription<???>("???", 10, algo_callback);
+        uart_sub_euler_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
+        uart_sub_motorvolt_ = this->create_subscription<uart_slave::msg::FocAngle>("Motor_voltage", 10, std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
+        uart_sub_action_ = this->create_subscription<std_msgs::msg::UInt8>("Robot_action", 10, std::bind(&UartPublisher::algo_callback, this, std::placeholders::_1));
         
         // send data to slave every 1s
         timer_ = this->create_wall_timer(100ms, std::bind(&UartPublisher::timer_callback, this));
     }
-
-    // ~UartPublisher() // destructor
-    // {
-    //     if (uart_fd_ != -1)
-    //     {
-    //         close(uart_fd_);
-    //     }
-    // }
 
 private:
   int open_serial(void)
@@ -128,6 +120,18 @@ private:
     temp_motorvolt_right = msg->right; 
   }
 
+  void algo_callback(const std_msgs::msg::UInt8::SharedPtr msg){
+    switch(msg->data)
+    {
+      case 0: temp_action = STOP; break;
+      case 1: temp_action = FORWARD; break;
+      case 2: temp_action = BACKWARD; break;
+      case 3: temp_action = ANTI_CLOCKWISE; break;
+      case 4: temp_action = CLOCKWISE; break;
+      default: temp_action = STOP; break;
+    }
+  }
+
   void timer_callback()
   {
     uint8_t data[M2S_PACKET_SIZE];
@@ -147,6 +151,7 @@ private:
     rs.speed_current = temp_speed_current;
     rs.angle_current = temp_angle_current;
     rs.angular_speed_current = temp_angular_speed_current;
+    rs.action = temp_action;
 
     std::cout << "speed_target = " << rs.speed_target << std::endl;
     std::cout << "speed_current = " << rs.speed_current << std::endl;
@@ -155,6 +160,7 @@ private:
     std::cout << "angular_speed_target = " << rs.angular_speed_target << std::endl;
     std::cout << "angular_speed_current = " << rs.angular_speed_current << std::endl;
     std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
+    std::cout << "action = " << rs.action << std::endl;
     std::cout << std::endl;
 
     // prepare the PACKET
@@ -193,6 +199,8 @@ private:
       data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(rs.vacuum_voltage, i-BYTE_POS_M2S_VACUUMVOLTAGE);
     }
 
+    data[BYTE_POS_M2S_ACTION] = rs.action;
+
     if (rs.foc_engaged == true) data[BYTE_POS_M2S_FOCMODE] = FOC_EN_CODE;
     else  data[BYTE_POS_M2S_FOCMODE] = FOC_DIS_CODE; // FOCMode
 
@@ -230,20 +238,12 @@ private:
   //   // get current angular speed
   // }
 
-  // void algo_callback(const ??? msg){
-  //   // get target speed
-  //   // get target angle
-  //   // get target angular speed
-  //   // get virtual estop
-  //   // get control mode
-  // }
-
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
   rclcpp::Subscription<serial_imu::msg::EulerAngle>::SharedPtr uart_sub_euler_;
   rclcpp::Subscription<uart_slave::msg::FocAngle>::SharedPtr uart_sub_motorvolt_;
+  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr uart_sub_action_;
   // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
-  // rclcpp::Subscription<???>::SharedPtr uart_sub_algo_;
 };
 
 int main(int argc, char * argv[])
