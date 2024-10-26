@@ -56,9 +56,11 @@
 
   31  |   FOCMode
 
-  32  |   CheckSum
+  32  |   Direction
 
-  33  |   EndBit
+  33  |   CheckSum
+
+  34  |   EndBit
 */
 
 /*
@@ -91,8 +93,9 @@
 #define BYTE_POS_M2S_CURANGSPEED    23
 #define BYTE_POS_M2S_VACUUMVOLTAGE  27
 #define BYTE_POS_M2S_FOCMODE        31
-#define BYTE_POS_M2S_CHECKSUM       32
-#define BYTE_POS_M2S_ENDBIT         33
+#define BYTE_POS_M2S_ACTION         32
+#define BYTE_POS_M2S_CHECKSUM       33
+#define BYTE_POS_M2S_ENDBIT         34
 
 #define BYTE_POS_S2M_STARTBIT        0
 #define BYTE_POS_S2M_DEBUGCODE       1
@@ -115,6 +118,13 @@ typedef uint8_t control_mode_t;
 
 #define FOC_EN_CODE       0xB1
 #define FOC_DIS_CODE      0xB2
+
+typedef uint8_t action_t;
+#define STOP              0x00
+#define FORWARD           0x01
+#define BACKWARD          0x02
+#define ANTI_CLOCKWISE    0x03
+#define CLOCKWISE         0x04
 
 typedef uint8_t debug_code_t;
 #define DEBUG_            0x00
