@@ -3,7 +3,7 @@
 
 import math
 import time
-import mapping
+from . import mapping
 
 # Create an instance of the Map class
 #map_instance = mapping.Map()
@@ -29,15 +29,16 @@ def read_sensors(map_instance):
     global R_ang, L_ang, acel  # Declare all globals that will be modified
 
     # Read sensor data
-    try:
-        R_ang = int(input("Enter right angle (R_ang): "))
-        L_ang = int(input("Enter left angle (L_ang): "))
-        acel = int(input("Enter acceleration (acel): "))
-        #x = int(input("Enter global x-coordinate: "))
-        #y = int(input("Enter global y-coordinate: "))
-    except ValueError:
-        print("Invalid input. Defaulting to 0 for all.")
-        R_ang = L_ang = acel = 0
+    # try:
+    #     R_ang = int(input("Enter right angle (R_ang): "))
+    #     L_ang = int(input("Enter left angle (L_ang): "))
+    #     acel = int(input("Enter acceleration (acel): "))
+    #     #x = int(input("Enter global x-coordinate: "))
+    #     #y = int(input("Enter global y-coordinate: "))
+    # except ValueError:
+    #     print("Invalid input. Defaulting to 0 for all.")
+    #     R_ang = L_ang = acel = 0
+    R_ang = L_ang = acel = 0
     #print("x is now: ", x, "    y is now: ", y)
     return x, y, direction
 

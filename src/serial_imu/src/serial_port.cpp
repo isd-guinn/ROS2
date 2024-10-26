@@ -15,6 +15,7 @@ extern "C"{
 #include "ch_serial.h"
 
 #define IMU_SERIAL  ("/dev/ttyUSB0")
+#define IMU_SERIAL_2  ("/dev/ttyUSB1")
 #define BAUD        (B115200)
 #define GRA_ACC     (9.8)
 #define DEG_TO_RAD  (0.01745329)
@@ -42,6 +43,11 @@ class IMUPublisher : public rclcpp::Node
 			imu_pub_euler_ = this->create_publisher<serial_imu::msg::EulerAngle>("/Imu_euler_angle", 20);
 			// timer_callback function to be init every 2ms -> 500ms for testing purpose
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::timer_callback, this));
+		}
+
+		~IMUPublisher()
+		{
+			close(fd);
 		}
 
 	private: 
@@ -94,13 +100,21 @@ class IMUPublisher : public rclcpp::Node
 			struct termios options;
 
 			int fd = open(IMU_SERIAL, O_RDWR | O_NOCTTY);
-			tcgetattr(fd,&options);
-
 			if(fd == -1)
 			{
-				perror("unable to open serial port");
-				exit(0);
+                std::cout   << "cannot open controller serial port: " 
+                            << IMU_SERIAL << std::endl;
+
+                fd = open(IMU_SERIAL_2, O_RDWR | O_NOCTTY);
+                if (fd == -1)
+                {
+                    std::cout << "cannot open controller serial port: "
+                              << IMU_SERIAL_2 << std::endl;
+                    exit(0);    
+                }
 			}
+
+			tcgetattr(fd,&options);
 			
 			if(fcntl(fd, F_SETFL, 0) < 0)
 				cout << "fcntl failed" << "\n" << endl;

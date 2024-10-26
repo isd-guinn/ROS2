@@ -17,16 +17,32 @@ void dead_reckon(position_t *data)
 {
     double dt = 0.1; // 100ms time step (assuming constant for simplicity)
     float alpha = 9 * dt; // ALPHA INCREASE WITH INCREASE dt
+    float threshold_a = 0.15;
+    float threshold_v = 0.08;
 
     // Low-pass filter for acceleration
+    std::cout << "acc_prev: " << data->acc_prev.x << ", " << data->acc_prev.y << std::endl;
+
     data->acc_current.x = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.x;
     data->acc_current.y = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.y;
 
+    std::cout << "acc_b4thres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
+
+    if (abs(data->acc_current.x) < threshold_a) data->acc_current.x = 0;
+    if (abs(data->acc_current.y) < threshold_a) data->acc_current.y = 0;
+    std::cout << "acc_afterthres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
+
     // Simple Integrate for velocity & position
-    data->vel.x += data->acc_current.x * dt;
-    data->vel.y += data->acc_current.y * dt;
+    data->vel.x = data->acc_current.x * dt;
+    data->vel.y = data->acc_current.y * dt;
+    std::cout << "int_v_b4thres: " << data->vel.x << ", " << data->vel.y << std::endl;
+    
+    if (abs(data->vel.x) < threshold_v) data->vel.x = 0;
+    if (abs(data->vel.y) < threshold_v) data->vel.y = 0;
+
     data->pos.x += data->vel.x * dt;
-    data->pos.y += data->vel.x * dt;
+    data->pos.y += data->vel.y * dt;
+    std::cout << "int_pos: " << data->pos.x << ", " << data->pos.y << std::endl;
 
     // save current acceleration for next iteration
     data->acc_prev.x = data->acc_current.x;

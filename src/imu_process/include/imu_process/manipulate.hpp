@@ -18,18 +18,6 @@ typedef struct
     vector_t vel;
     vector_t acc_current;
     vector_t acc_prev;
-    // float pos_x = 0.0f; 
-    // float pos_y = 0.0f; 
-    // float pos_z = 0.0f; 
-    // float vel_x;
-    // float vel_y;
-    // float vel_z;
-    // float acc_x_current;
-    // float acc_y_current;
-    // float acc_z_current;
-    // float acc_x_previous;
-    // float acc_y_previous;
-    // float acc_z_previous;
 
     float angle_z = 0.0f; // z-axis
     float angVel_z_current;

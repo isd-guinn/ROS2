@@ -2,13 +2,15 @@
 
 # main.py
 import time
-import mapping
-import navigation 
+from . import mapping
+from . import navigation 
 import math
 
 # Global variables representing sensor data
 R_ang = navigation.R_ang
 L_ang = navigation.L_ang
+# L_ang = 0
+# R_ang = 0
 acel = navigation.acel
 direction = navigation.direction
 x  = navigation.x

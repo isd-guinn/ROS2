@@ -55,7 +55,7 @@ install(PROGRAMS
         scripts/nav_algo_node.py
         DESTINATION lib/${PROJECT_NAME}
 )
-install(DIRECTORY launch scripts src nav_algo
+install(DIRECTORY launch scripts nav_algo
         DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)

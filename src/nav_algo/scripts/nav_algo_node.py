@@ -34,6 +34,7 @@ def calculate_distance(dist, v_x, reached, dt):
         dist = 0.0
         print("dist is reset to: ", dist)
     print("reached: ", reached)
+    print(" ")
     return dist, reached, dt
 
 class NavAlgo(Node):
@@ -41,7 +42,7 @@ class NavAlgo(Node):
     def __init__(self):
         super().__init__('nav_algo') # initialize the node
         
-        self.nav_sub_pos_local_ = self.create_subscription(imu_process.msg.Position, 'Imu_local', self.position_callback, 10)
+        self.nav_sub_pos_local_ = self.create_subscription(imu_process.msg.Position, 'Imu_local', self.position_callback, 50)
         # self.nav_sub_focangle_ = self.create_subscription(uart_slave.msg.FocAngle, 'Motor_voltage', self.focangle_callback, 10)
         self.nav_pub_action_ = self.create_publisher(std_msgs.msg.UInt8, '/Robot_action', 10)
         
@@ -53,12 +54,14 @@ class NavAlgo(Node):
         self.is_moving = False
         self.distance_counter = 0.0
         self.reach_distance = False
-        self.foc_left = 0.0
-        self.foc_right = 0.0
+        self.foc_left = 3.0 # dummy values
+        self.foc_right = 3.0 # dummy values
         self.dt = 0.0 # for keeping time for integration
         
     def position_callback(self, msg):
-        print("\nposition_callback")
+        print("current time:", rclpy.clock.Clock().now().nanoseconds)
+        print("\nposition msg time: ", msg.header.stamp.sec)
+        print("position_callback")
         print("vel_x: ", msg.vel_x)
         print("vel_y: ", msg.vel_y)
         self.vel_x = round(msg.vel_x, 4)
@@ -74,8 +77,14 @@ class NavAlgo(Node):
         
         if self.vel_x > threshold:
             self.is_moving = True
+            print("self.is_moving: ", self.is_moving)
+        
+        if self.reach_distance == True:
             # run the navigation algorithm
+            print("\nRunning the navigation algorithm.....")
+            print("current time:", rclpy.clock.Clock().now().nanoseconds)
             action = run_nav_algo(self.foc_left, self.foc_right, self.is_moving, self.reach_distance)
+            print("current time:", rclpy.clock.Clock().now().nanoseconds)
             print("action: ", action)
             # publish the action
             action_msg = std_msgs.msg.UInt8()
@@ -84,6 +93,7 @@ class NavAlgo(Node):
             self.nav_pub_action_.publish(action_msg)
         
         # reset the boolean
+        print("Resetting the boolean variables.....")
         self.is_moving = False
         self.reach_distance = False
         

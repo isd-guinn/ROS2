@@ -54,6 +54,8 @@ class IMUProcessor : public rclcpp::Node
 			local_data.acc_current.x = precision(msg->linear_acceleration.x, 10);
     		local_data.acc_current.y = precision(msg->linear_acceleration.y, 10);
 			local_data.angVel_z_current = precision(msg->angular_velocity.z, 10);
+			std::cout << "---------------------------" << std::endl;
+			std::cout << "Current Acc Reading: " << local_data.acc_current.x << ", " << local_data.acc_current.y << std::endl;
 			// process the receive message
 			dead_reckon(&local_data);
 			update_angle(&local_data);
@@ -102,7 +104,6 @@ class IMUProcessor : public rclcpp::Node
 			// */
 			
 			// debug
-			RCLCPP_INFO(this->get_logger(), "Integrated Local Position -> x: %f, y: %f", local_data.pos.x, local_data.pos.y);
 			// RCLCPP_INFO(this->get_logger(), "Integrated Global Position -> x: %f, y: %f", global.pos_x, global.pos_y);
 		}
 };
