@@ -4,6 +4,7 @@
 
 #include <cmath>
 // #include <Eigen/Dense>
+#include "rclcpp/rclcpp.hpp"
 
 using namespace std;
 
@@ -13,40 +14,63 @@ float precision( float value, int precision )
     return std::round(value * n) / n ;
 }
 
-void dead_reckon(position_t *data)
+void dead_reckon(position_t *data, double &last_update_time)
 {
     double dt = 0.1; // 100ms time step (assuming constant for simplicity)
-    float alpha = 9 * dt; // ALPHA INCREASE WITH INCREASE dt
-    float threshold_a = 0.15;
-    float threshold_v = 0.08;
+    float alpha = 0.5; 
+    int32_t current_time = rclcpp::Clock().now().seconds();
+    int32_t elapsed_time = current_time - last_update_time;
+
+    if (elapsed_time == 0) {
+        std::cout << "Elapsed time is 0" << std::endl;
+        return;
+    }
+    // predict
+    data->acc_predict.x = data->acc_prev.x;
+    data->vel_predict.x = data->vel_prev.x + data->acc_prev.x * elapsed_time;
+    data->pos_predict.x = data->pos_prev.x + data->vel_prev.x * elapsed_time + 0.5 * data->acc_prev.x * elapsed_time * elapsed_time;
+
+    // update
+    data->acc_final.x = (1-alpha) * data->acc_predict.x + alpha * data->acc_measured.x;
+    data->vel_final.x = (1-alpha) * data->vel_predict.x + alpha * (data->acc_measured.x - data->acc_predict.x) * elapsed_time;
+    data->pos_final.x = (1-alpha) * data->pos_predict.x + alpha * (data->acc_measured.x - data->acc_predict.x) * elapsed_time * elapsed_time;
+
+    // save
+    data->pos_prev.x = data->pos_final.x;
+    data->vel_prev.x = data->vel_final.x;
+    data->acc_prev.x = data->acc_final.x;
+
+    last_update_time = current_time;
+
+    /////////////////////////////////////////////////////////////////
 
     // Low-pass filter for acceleration
-    std::cout << "acc_prev: " << data->acc_prev.x << ", " << data->acc_prev.y << std::endl;
+//     std::cout << "acc_prev: " << data->acc_prev.x << ", " << data->acc_prev.y << std::endl;
 
-    data->acc_current.x = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.x;
-    data->acc_current.y = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.y;
+//     data->acc_current.x = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.x;
+//     data->acc_current.y = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.y;
 
-    std::cout << "acc_b4thres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
+//     std::cout << "acc_b4thres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
 
-    if (abs(data->acc_current.x) < threshold_a) data->acc_current.x = 0;
-    if (abs(data->acc_current.y) < threshold_a) data->acc_current.y = 0;
-    std::cout << "acc_afterthres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
+//     if (abs(data->acc_current.x) < threshold_a) data->acc_current.x = 0;
+//     if (abs(data->acc_current.y) < threshold_a) data->acc_current.y = 0;
+//     std::cout << "acc_afterthres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
 
-    // Simple Integrate for velocity & position
-    data->vel.x = data->acc_current.x * dt;
-    data->vel.y = data->acc_current.y * dt;
-    std::cout << "int_v_b4thres: " << data->vel.x << ", " << data->vel.y << std::endl;
+//     // Simple Integrate for velocity & position
+//     data->vel.x += data->acc_current.x * dt;
+//     data->vel.y += data->acc_current.y * dt;
+//     std::cout << "int_v_b4thres: " << data->vel.x << ", " << data->vel.y << std::endl;
     
-    if (abs(data->vel.x) < threshold_v) data->vel.x = 0;
-    if (abs(data->vel.y) < threshold_v) data->vel.y = 0;
+//     if (abs(data->vel.x) < threshold_v) data->vel.x = 0;
+//     if (abs(data->vel.y) < threshold_v) data->vel.y = 0;
+    
+//     data->pos.x += data->vel.x * dt;
+//     data->pos.y += data->vel.y * dt;
+//     std::cout << "int_pos: " << data->pos.x << ", " << data->pos.y << std::endl;
 
-    data->pos.x += data->vel.x * dt;
-    data->pos.y += data->vel.y * dt;
-    std::cout << "int_pos: " << data->pos.x << ", " << data->pos.y << std::endl;
-
-    // save current acceleration for next iteration
-    data->acc_prev.x = data->acc_current.x;
-    data->acc_prev.y = data->acc_current.y;
+//     // save current acceleration for next iteration
+//     data->acc_prev.x = data->acc_current.x;
+//     data->acc_prev.y = data->acc_current.y;
 }
 
 void update_angle(position_t *data){
@@ -54,7 +78,7 @@ void update_angle(position_t *data){
     // data->angle_z += data->angVel_z_current * dt;
 
     // low-pass filter for angular velocity
-    float alpha = 9 * dt; // ALPHA INCREASE WITH INCREASE dt
+    float alpha = 0.1;
     data->angVel_z_current = alpha * data->angVel_z_current + (1 - alpha) * data->angVel_z_previous;
 
     // save current acceleration for next iteration

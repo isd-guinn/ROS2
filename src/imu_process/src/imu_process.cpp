@@ -17,15 +17,9 @@
 using namespace std::chrono_literals;
 using namespace std;
 
-position_t local_data = {
-	{0.0f, 0.0f, 0.0f},	// position in local frame
-	{0.0f, 0.0f, 0.0f},	// velocity in local frame
-	{0.0f, 0.0f, 0.0f},	// current acceleration
-	{0.0f, 0.0f, 0.0f},	// previous acceleration
-	0.0f,			// current angle (z-axis)
-	0.0f,			// current angular velocity (z-axis)
-	0.0f			// previous angular velocity (z-axis)
-};	
+position_t local_data;
+
+int32_t last_update_time = 0;
 
 class IMUProcessor : public rclcpp::Node
 {
@@ -51,13 +45,13 @@ class IMUProcessor : public rclcpp::Node
 		// callback for pub the integrated imu delta-position (x & y)
         void rawimu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 			// retreive data from msg
-			local_data.acc_current.x = precision(msg->linear_acceleration.x, 10);
-    		local_data.acc_current.y = precision(msg->linear_acceleration.y, 10);
+			local_data.acc_measured.x = precision(msg->linear_acceleration.x, 10);
+    		local_data.acc_measured.y = precision(msg->linear_acceleration.y, 10);
 			local_data.angVel_z_current = precision(msg->angular_velocity.z, 10);
 			std::cout << "---------------------------" << std::endl;
-			std::cout << "Current Acc Reading: " << local_data.acc_current.x << ", " << local_data.acc_current.y << std::endl;
+			std::cout << "Measured Acceleration: " << local_data.acc_measured.x << ", " << local_data.acc_measured.y << std::endl;
 			// process the receive message
-			dead_reckon(&local_data);
+			dead_reckon(&local_data, last_update_time);
 			update_angle(&local_data);
         }
 
@@ -82,29 +76,21 @@ class IMUProcessor : public rclcpp::Node
 			// auto global = imu_process::msg::Position();
 
 			// publish local position
-			local.pos_x = local_data.pos.x;
-			local.pos_y = local_data.pos.y;
-			local.pos_z = local_data.pos.z;
-			local.vel_x = local_data.vel.x;
-			local.vel_y = local_data.vel.y;
-			local.vel_z = local_data.vel.z;
-			local.acc_x = local_data.acc_current.x;
-			local.acc_y = local_data.acc_current.y;
-			local.acc_z = local_data.acc_current.z;
+			local.pos_x = local_data.pos_final.x;
+			local.pos_y = local_data.pos_final.y;
+			local.pos_z = local_data.pos_final.z;
+			local.vel_x = local_data.vel_final.x;
+			local.vel_y = local_data.vel_final.y;
+			local.vel_z = local_data.vel_final.z;
+			local.acc_x = local_data.acc_final.x;
+			local.acc_y = local_data.acc_final.y;
+			local.acc_z = local_data.acc_final.z;
 
 			local.angle_z = local_data.angle_z;
 
 			local.header.stamp = rclcpp::Clock().now();
 			local.header.frame_id = "base_link"; // the frame that this data is associated with
             local_pos_pub_->publish(local); 
-
-			/* publish global position
-			global.header.stamp = rclcpp::Clock().now();
-			global.header.frame_id = "map"; // the frame that this data is associated with
-			// */
-			
-			// debug
-			// RCLCPP_INFO(this->get_logger(), "Integrated Global Position -> x: %f, y: %f", global.pos_x, global.pos_y);
 		}
 };
 

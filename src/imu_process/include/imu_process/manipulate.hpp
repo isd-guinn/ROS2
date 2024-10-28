@@ -14,14 +14,20 @@ typedef struct {
 
 typedef struct
 {
-    vector_t pos = {0.0f, 0.0f, 0.0f};
-    vector_t vel;
-    vector_t acc_current;
-    vector_t acc_prev;
+    vector_t pos_prev = {0.0f, 0.0f, 0.0f};
+    vector_t vel_prev = {0.0f, 0.0f, 0.0f};
+    vector_t acc_prev = {0.0f, 0.0f, 0.0f};
+    vector_t pos_predict = {0.0f, 0.0f, 0.0f};
+    vector_t vel_predict = {0.0f, 0.0f, 0.0f};
+    vector_t acc_predict = {0.0f, 0.0f, 0.0f};
+    vector_t acc_measured = {0.0f, 0.0f, 0.0f};
+    vector_t vel_final = {0.0f, 0.0f, 0.0f};
+    vector_t pos_final = {0.0f, 0.0f, 0.0f};
+    vector_t acc_final = {0.0f, 0.0f, 0.0f};
 
     float angle_z = 0.0f; // z-axis
-    float angVel_z_current;
-    float angVel_z_previous;
+    float angVel_z_current = 0.0f;
+    float angVel_z_previous = 0.0f;
 } position_t;
 
 float precision(float value, int precision);
