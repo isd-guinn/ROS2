@@ -19,7 +19,7 @@ using namespace std;
 
 position_t local_data;
 
-int32_t last_update_time = 0;
+// double last_update_time = 0;
 
 class IMUProcessor : public rclcpp::Node
 {
@@ -34,6 +34,7 @@ class IMUProcessor : public rclcpp::Node
 			
 			timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
 		}
+		double last_update_time = 0;
 
     private:
 		rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr rawimu_sub_;
@@ -52,7 +53,13 @@ class IMUProcessor : public rclcpp::Node
 			std::cout << "Measured Acceleration: " << local_data.acc_measured.x << ", " << local_data.acc_measured.y << std::endl;
 			// process the receive message
 			dead_reckon(&local_data, last_update_time);
+			// std::cout << "callback last update time: " << last_update_time << std::endl;
 			update_angle(&local_data);
+
+			std::cout << "Final Position: " << local_data.pos_final.x << ", " << local_data.pos_final.y << std::endl;
+			std::cout << "Final Velocity: " << local_data.vel_final.x << ", " << local_data.vel_final.y << std::endl;
+			std::cout << "Final Acceleration: " << local_data.acc_final.x << ", " << local_data.acc_final.y << std::endl;
+			std::cout << "---------------------------" << std::endl;
         }
 
 		/*

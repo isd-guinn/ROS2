@@ -35,7 +35,7 @@ float precision(float value, int precision);
 /* --------- FOR LOCAL FRAMES ------------ */
 
 /* Output: position-related data in local frame */
-void dead_reckon(position_t *data);
+void dead_reckon(position_t *data, double &last_update_time);
 /* Output: Current Angle in local frame */
 void update_angle(position_t *data);
 

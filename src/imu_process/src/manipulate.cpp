@@ -16,65 +16,56 @@ float precision( float value, int precision )
 
 void dead_reckon(position_t *data, double &last_update_time)
 {
-    double dt = 0.1; // 100ms time step (assuming constant for simplicity)
-    float alpha = 0.5; 
-    int32_t current_time = rclcpp::Clock().now().seconds();
-    int32_t elapsed_time = current_time - last_update_time;
+    // double dt = 0.1; // 100ms time step (assuming constant for simplicity)
+    float alpha = 0.1; 
+    double current_time = double_t(rclcpp::Clock().now().seconds());
+    std::cout << "Current time: " << current_time << std::endl;
+    // std::cout << "Last update time: " << last_update_time << std::endl;
+    double elapsed_time = current_time - last_update_time;
+    std::cout << "Elapsed time: " << elapsed_time << std::endl;
 
     if (elapsed_time == 0) {
         std::cout << "Elapsed time is 0" << std::endl;
         return;
     }
-    // predict
-    data->acc_predict.x = data->acc_prev.x;
-    data->vel_predict.x = data->vel_prev.x + data->acc_prev.x * elapsed_time;
-    data->pos_predict.x = data->pos_prev.x + data->vel_prev.x * elapsed_time + 0.5 * data->acc_prev.x * elapsed_time * elapsed_time;
 
-    // update
+    if (elapsed_time > 0.1) {
+        std::cout << "Elapsed time is too large" << std::endl;
+        last_update_time = double_t(rclcpp::Clock().now().seconds());
+        return;
+    }
+
+    // estimate
+    data->vel_predict.x = data->vel_prev.x;
+    data->vel_predict.y = data->vel_prev.y;
+    data->acc_predict.x = 0;
+    data->acc_predict.y = 0;
+    data->pos_predict.x = data->pos_prev.x + data->vel_prev.x * elapsed_time;
+    data->pos_predict.y = data->pos_prev.y + data->vel_prev.y * elapsed_time;
+    std::cout << "Predicted Position: " << data->pos_predict.x << " " << data->pos_predict.y << std::endl;
+    std::cout << "Predicted Velocity: " << data->vel_predict.x << " " << data->vel_predict.y << std::endl;
+
     data->acc_final.x = (1-alpha) * data->acc_predict.x + alpha * data->acc_measured.x;
-    data->vel_final.x = (1-alpha) * data->vel_predict.x + alpha * (data->acc_measured.x - data->acc_predict.x) * elapsed_time;
-    data->pos_final.x = (1-alpha) * data->pos_predict.x + alpha * (data->acc_measured.x - data->acc_predict.x) * elapsed_time * elapsed_time;
+    data->acc_final.y = (1-alpha) * data->acc_predict.y + alpha * data->acc_measured.y;
+    if (abs(data->acc_final.x) < 0.05) data->acc_final.x = 0;
+    if (abs(data->acc_final.y) < 0.05) data->acc_final.y = 0;
+    data->vel_final.x = data->vel_prev.x + alpha * data->acc_final.x * elapsed_time;
+    data->vel_final.y = data->vel_prev.y + alpha * data->acc_final.y * elapsed_time;
+    data->pos_final.x = data->pos_prev.x + data->vel_prev.x * elapsed_time + 0.5 * alpha * data->acc_final.x * elapsed_time * elapsed_time;
+    data->pos_final.y = data->pos_prev.y + data->vel_prev.y * elapsed_time + 0.5 * alpha * data->acc_final.y * elapsed_time * elapsed_time;
 
-    // save
-    data->pos_prev.x = data->pos_final.x;
-    data->vel_prev.x = data->vel_final.x;
     data->acc_prev.x = data->acc_final.x;
+    data->acc_prev.y = data->acc_final.y;
+    data->vel_prev.x = data->vel_final.x;
+    data->vel_prev.y = data->vel_final.y;
+    data->pos_prev.x = data->pos_final.x;
+    data->pos_prev.y = data->pos_final.y;
 
     last_update_time = current_time;
-
-    /////////////////////////////////////////////////////////////////
-
-    // Low-pass filter for acceleration
-//     std::cout << "acc_prev: " << data->acc_prev.x << ", " << data->acc_prev.y << std::endl;
-
-//     data->acc_current.x = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.x;
-//     data->acc_current.y = alpha * data->acc_current.x + (1 - alpha) * data->acc_prev.y;
-
-//     std::cout << "acc_b4thres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
-
-//     if (abs(data->acc_current.x) < threshold_a) data->acc_current.x = 0;
-//     if (abs(data->acc_current.y) < threshold_a) data->acc_current.y = 0;
-//     std::cout << "acc_afterthres: " << data->acc_current.x << ", " << data->acc_current.y << std::endl;
-
-//     // Simple Integrate for velocity & position
-//     data->vel.x += data->acc_current.x * dt;
-//     data->vel.y += data->acc_current.y * dt;
-//     std::cout << "int_v_b4thres: " << data->vel.x << ", " << data->vel.y << std::endl;
-    
-//     if (abs(data->vel.x) < threshold_v) data->vel.x = 0;
-//     if (abs(data->vel.y) < threshold_v) data->vel.y = 0;
-    
-//     data->pos.x += data->vel.x * dt;
-//     data->pos.y += data->vel.y * dt;
-//     std::cout << "int_pos: " << data->pos.x << ", " << data->pos.y << std::endl;
-
-//     // save current acceleration for next iteration
-//     data->acc_prev.x = data->acc_current.x;
-//     data->acc_prev.y = data->acc_current.y;
 }
 
 void update_angle(position_t *data){
-    double dt = 0.1;
+    // double dt = 0.1;
     // data->angle_z += data->angVel_z_current * dt;
 
     // low-pass filter for angular velocity
