@@ -24,11 +24,11 @@ TIMER_PERIOD_IN_SECOND = 0.01 # seconds
 def calculate_distance(dist, v_x, reached, dt):
     print("\nCalculating distance.....")
 
-    dist += v_x * dt # seconds, dummy value
+    dist += abs(v_x * dt) # seconds, dummy value
     print("dist: ", dist)
     dt = 0.0 # reset the time counter
     print("self.dt is reset: ", dt)
-    if dist >= 30:
+    if dist >= 0.03:
         # reached 30cm, reset the distance counter
         reached = True
         dist = 0.0
@@ -43,7 +43,7 @@ class NavAlgo(Node):
         super().__init__('nav_algo') # initialize the node
         
         self.nav_sub_pos_local_ = self.create_subscription(imu_process.msg.Position, 'Imu_local', self.position_callback, 50)
-        # self.nav_sub_focangle_ = self.create_subscription(uart_slave.msg.FocAngle, 'Motor_voltage', self.focangle_callback, 10)
+        self.nav_sub_focangle_ = self.create_subscription(uart_slave.msg.FocAngle, 'FOC_angle', self.focangle_callback, 10)
         self.nav_pub_action_ = self.create_publisher(std_msgs.msg.UInt8, '/Robot_action', 10)
         
         self.timer_ = self.create_timer(TIMER_PERIOD_IN_SECOND, self.timer_callback)
@@ -60,12 +60,14 @@ class NavAlgo(Node):
         
     def position_callback(self, msg):
         print("current time:", rclpy.clock.Clock().now().nanoseconds)
-        print("\nposition msg time: ", msg.header.stamp.sec)
+        print("position msg time: ", msg.header.stamp.sec)
         print("position_callback")
         print("vel_x: ", msg.vel_x)
         print("vel_y: ", msg.vel_y)
-        self.vel_x = round(msg.vel_x, 4)
-        self.vel_y = round(msg.vel_y, 4)
+
+        # get data from message
+        self.vel_x = round(msg.vel_x, 10)
+        self.vel_y = round(msg.vel_y, 10)
         print("self.vel_x: ", self.vel_x)
         print("self.vel_y: ", self.vel_y)
         
@@ -73,7 +75,7 @@ class NavAlgo(Node):
         self.distance_counter, self.reach_distance, self.dt = calculate_distance(self.distance_counter, self.vel_x, self.reach_distance, self.dt)
         
         # threshold for determining if the robot is moving
-        threshold = 0.1
+        threshold = 0.0001
         
         if self.vel_x > threshold:
             self.is_moving = True
@@ -83,9 +85,12 @@ class NavAlgo(Node):
             # run the navigation algorithm
             print("\nRunning the navigation algorithm.....")
             print("current time:", rclpy.clock.Clock().now().nanoseconds)
-            action = run_nav_algo(self.foc_left, self.foc_right, self.is_moving, self.reach_distance)
+            action = 10 # dummy value
+            # foc angle needs to be in degree
+            # action = run_nav_algo(self.foc_left, self.foc_right, self.is_moving)
             print("current time:", rclpy.clock.Clock().now().nanoseconds)
             print("action: ", action)
+
             # publish the action
             action_msg = std_msgs.msg.UInt8()
             action_msg.data = action
@@ -97,12 +102,12 @@ class NavAlgo(Node):
         self.is_moving = False
         self.reach_distance = False
         
-    # def focangle_callback(self, msg):
-    #     print("\nfocangle_callback")
-    #     print("FOC left: ", msg.left)
-    #     print("FOC right: ", msg.right)
-    #     self.foc_left = precision(msg.left, 10)
-    #     self.foc_right = precision(msg.right, 10)
+    def focangle_callback(self, msg):
+        print("\nfocangle_callback")
+        print("FOC left: ", msg.left)
+        print("FOC right: ", msg.right)
+        self.foc_left = round(msg.left, 10)
+        self.foc_right = round(msg.right, 10)
     
     def timer_callback(self):
         # print("\n 0.01 second passed")

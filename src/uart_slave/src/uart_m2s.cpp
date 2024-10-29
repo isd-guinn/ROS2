@@ -223,13 +223,13 @@ private:
     {
       RCLCPP_INFO(this->get_logger(), "Wrote %ld bytes to serial port", bytes_written);
       // for debug: display the bytes
-      std::cout << "Bytes of the data sent: " << std::endl;
+      // std::cout << "Bytes of the data sent: " << std::endl;
       for (int i = 0; i < M2S_PACKET_SIZE; i++)
       {
         std::cout << std::hex << static_cast<int>(data[i]) << " ";
       }
       std::cout << std::endl;
-      std::cout << "---------------------------------------" << std::endl;
+      // std::cout << "---------------------------------------" << std::endl;
     }
   }
 

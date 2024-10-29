@@ -8,7 +8,8 @@
 // #include <Eigen/Dense>
 #include "rclcpp/rclcpp.hpp"
 
-#define GRAVITY 9.81
+#define GRAVITY     (9.81)
+#define DEG_TO_RAD  (0.01745329)
 
 using namespace std;
 
@@ -18,7 +19,7 @@ float precision( float value, int precision )
     return std::round(value * n) / n ;
 }
 
-void dead_reckon(position_t *data, double &last_update_time, Eigen::Matrix3f RotationalMatrix)
+double dead_reckon(position_t *data, double &last_update_time)
 {
     // double dt = 0.1; // 100ms time step (assuming constant for simplicity)
     float alpha = 0.1; 
@@ -30,13 +31,13 @@ void dead_reckon(position_t *data, double &last_update_time, Eigen::Matrix3f Rot
 
     if (elapsed_time == 0) {
         std::cout << "Elapsed time is 0" << std::endl;
-        return;
+        return NULL;
     }
 
     if (elapsed_time > 0.1) {
         std::cout << "Elapsed time is too large" << std::endl;
         last_update_time = double_t(rclcpp::Clock().now().seconds());
-        return;
+        return NULL;
     }
 
     // estimate
@@ -45,49 +46,47 @@ void dead_reckon(position_t *data, double &last_update_time, Eigen::Matrix3f Rot
     data->pos_predict = data->pos_prev + data->vel_prev * elapsed_time;
     std::cout << "Predicted Position: " << data->pos_predict.transpose() << std::endl;
     std::cout << "Predicted Velocity: " << data->vel_predict.transpose() << std::endl;
-    // data->vel_predict.x = data->vel_prev.x;
-    // data->vel_predict.y = data->vel_prev.y;
-    // data->acc_predict.x = 0;
-    // data->acc_predict.y = 0;
-    // data->pos_predict.x = data->pos_prev.x + data->vel_prev.x * elapsed_time;
-    // data->pos_predict.y = data->pos_prev.y + data->vel_prev.y * elapsed_time;
-    // std::cout << "Predicted Position: " << data->pos_predict.x << " " << data->pos_predict.y << std::endl;
-    // std::cout << "Predicted Velocity: " << data->vel_predict.x << " " << data->vel_predict.y << std::endl;
 
     data->acc_final = (1-alpha) * data->acc_predict + alpha * data->acc_measured;
     if (abs(data->acc_final(0)) < 0.05) data->acc_final(0) = 0;
     if (abs(data->acc_final(1)) < 0.05) data->acc_final(1) = 0;
     data->vel_final = data->vel_prev + alpha * data->acc_final * elapsed_time;
     data->pos_final = data->pos_prev + data->vel_prev * elapsed_time + 0.5 * alpha * data->acc_final * elapsed_time * elapsed_time;
-    // data->acc_final.x = (1-alpha) * data->acc_predict.x + alpha * data->acc_measured.x;
-    // data->acc_final.y = (1-alpha) * data->acc_predict.y + alpha * data->acc_measured.y;
-    // if (abs(data->acc_final.x) < 0.05) data->acc_final.x = 0;
-    // if (abs(data->acc_final.y) < 0.05) data->acc_final.y = 0;
-    // data->vel_final.x = data->vel_prev.x + alpha * data->acc_final.x * elapsed_time;
-    // data->vel_final.y = data->vel_prev.y + alpha * data->acc_final.y * elapsed_time;
-    // data->pos_final.x = data->pos_prev.x + data->vel_prev.x * elapsed_time + 0.5 * alpha * data->acc_final.x * elapsed_time * elapsed_time;
-    // data->pos_final.y = data->pos_prev.y + data->vel_prev.y * elapsed_time + 0.5 * alpha * data->acc_final.y * elapsed_time * elapsed_time;
 
     data->acc_prev = data->acc_final;
     data->vel_prev = data->vel_final;
     data->pos_prev = data->pos_final;
-    // data->acc_prev.x = data->acc_final.x;
-    // data->acc_prev.y = data->acc_final.y;
-    // data->vel_prev.x = data->vel_final.x;
-    // data->vel_prev.y = data->vel_final.y;
-    // data->pos_prev.x = data->pos_final.x;
-    // data->pos_prev.y = data->pos_final.y;
 
     last_update_time = current_time;
+    return elapsed_time;
 }
 
-void update_angle(position_t *data){
+void update_angle(position_t *data, double elapsed_time){
+    if (elapsed_time == NULL) {
+        std::cout << "Elapsed time is 0" << std::endl;
+        return;
+    }
+    
     // double dt = 0.1;
     // data->angle_z += data->angVel_z_current * dt;
 
     // low-pass filter for angular velocity
-    float alpha = 0.1;
-    data->angVel_z_current = alpha * data->angVel_z_current + (1 - alpha) * data->angVel_z_previous;
+    float alpha = 0.2;
+    float temp = data->angle_z / DEG_TO_RAD;
+    std::cout << "previous Angle (degree): " << temp << std::endl;
+    float temp2 = data->angVel_z_previous / DEG_TO_RAD;
+    std::cout << "previous AngVel: " << temp2 << std::endl;
+    float temp3 = data->angVel_z_current / DEG_TO_RAD;
+    std::cout << "measured AngVel: " << temp3 << std::endl;
+    data->angVel_z_current = (1 - alpha) * data->angVel_z_previous + alpha * data->angVel_z_current;
+    if (abs(data->angVel_z_current) < 0.003) data->angVel_z_current = 0;
+    float temp4 = data->angVel_z_current / DEG_TO_RAD;
+    std::cout << "filtered AngVel: " << temp4 << std::endl;
+
+    // integrate to get angle
+    data->angle_z += data->angVel_z_current * elapsed_time;
+    float temp5 = data->angle_z / DEG_TO_RAD;
+    std::cout << "Updated Angle: " << temp5 << std::endl;
 
     // save current acceleration for next iteration
     data->angVel_z_previous = data->angVel_z_current;

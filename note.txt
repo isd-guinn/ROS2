@@ -9,7 +9,6 @@ cd /ros2_ws
 source /ros2_ws/install/setup.bash
 colcon build --packages-select serial_imu
 colcon build --packages-select uart_slave
-// to be debugged:
 colcon build --packages-select imu_process 
 colcon build --packages-select nav_algo
 
@@ -20,6 +19,10 @@ colcon build --packages-select nav_algo
 ## ros2 launch nav_algo nav_algo.launch.py
 
 chmod +x /ros2_ws/install/nav_algo/lib/nav_algo/nav_algo_node.py 
+
+# to update the start-up code
+- upload the latest code to docker image & update the docker image
+- update docker-compose.yml
 
 imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
 when at rest, 

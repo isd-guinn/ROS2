@@ -66,26 +66,22 @@ class IMUProcessor : public rclcpp::Node
 			std::cout << "---------------------------" << std::endl;
 
 			std::cout << "Measured Acceleration: " << local_data.acc_measured.transpose() << std::endl;
-			// std::cout << "Measured Acceleration: " << local_data.acc_measured.x << ", " << local_data.acc_measured.y << std::endl;
 			Eigen::Matrix3f RotationalMatrix = quaternionToRotationMatrix(local_data.quat);
 			std::cout << "Quaternion: " << local_data.quat << std::endl;
 			std::cout << "Rotational Matrix: " << std::endl;
 			std::cout << RotationalMatrix << std::endl;
 
-			Eigen::Array3f gravity_local = distributeGravity(RotationalMatrix);
-			std::cout << "Gravity in local frame: " << gravity_local << std::endl;
+			// Eigen::Array3f gravity_local = distributeGravity(RotationalMatrix);
+			// std::cout << "Gravity in local frame: " << gravity_local << std::endl;
 
 			// process the receive message
-			dead_reckon(&local_data, last_update_time, RotationalMatrix);
+			double elapse_time = dead_reckon(&local_data, last_update_time);
 			// std::cout << "callback last update time: " << last_update_time << std::endl;
-			update_angle(&local_data);
+			update_angle(&local_data, elapse_time);
 
 			std::cout << "Final Position: " << local_data.pos_final.transpose() << std::endl;
 			std::cout << "Final Velocity: " << local_data.vel_final.transpose() << std::endl;
 			std::cout << "Final Acceleration: " << local_data.acc_final.transpose() << std::endl;
-			// std::cout << "Final Position: " << local_data.pos_final.x << ", " << local_data.pos_final.y << std::endl;
-			// std::cout << "Final Velocity: " << local_data.vel_final.x << ", " << local_data.vel_final.y << std::endl;
-			// std::cout << "Final Acceleration: " << local_data.acc_final.x << ", " << local_data.acc_final.y << std::endl;
 			std::cout << "---------------------------" << std::endl;
 
         }

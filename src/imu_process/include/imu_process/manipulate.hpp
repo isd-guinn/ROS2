@@ -49,10 +49,10 @@ float precision(float value, int precision);
 
 /* --------- FOR LOCAL FRAMES ------------ */
 
-/* Output: position-related data in local frame */
-void dead_reckon(position_t *data, double &last_update_time, Eigen::Matrix3f RotationalMatrix);
+/* Output: position-related data in local frame, return elapse time */
+double dead_reckon(position_t *data, double &last_update_time);
 /* Output: Current Angle in local frame */
-void update_angle(position_t *data);
+void update_angle(position_t *data, double elapsed_time);
 
 /* --------- FOR FRAME TRANSFORMATION ------------ */
 

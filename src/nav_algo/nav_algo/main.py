@@ -16,7 +16,7 @@ direction = navigation.direction
 x  = navigation.x
 y = navigation.y
 
-def run_nav_algo(foc_left, foc_right, is_moving, reach_distance, arg=None):
+def run_nav_algo(foc_left, foc_right, is_moving, arg=None):
      
     try:
         map_instance = mapping.Map()
