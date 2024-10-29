@@ -27,7 +27,7 @@ extern "C"{
 #endif
 
 #define BAUD          (B115200)
-#define SLAVE_SERIAL  ("/dev/ttyAMA0") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
+#define SLAVE_SERIAL  ("/dev/ttyAMA10") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
 #define DEG_TO_RAD  (0.01745329)
 #ifdef __cplusplus
 }
@@ -153,15 +153,15 @@ private:
     rs.angular_speed_current = temp_angular_speed_current;
     rs.action = temp_action;
 
-    std::cout << "speed_target = " << rs.speed_target << std::endl;
-    std::cout << "speed_current = " << rs.speed_current << std::endl;
-    std::cout << "angle_target = " << rs.angle_target << std::endl;
-    std::cout << "angle_current = " << rs.angle_current << std::endl;
-    std::cout << "angular_speed_target = " << rs.angular_speed_target << std::endl;
-    std::cout << "angular_speed_current = " << rs.angular_speed_current << std::endl;
-    std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
-    std::cout << "action = " << rs.action << std::endl;
-    std::cout << std::endl;
+    std::cout << "speed_target (LWheelVolt)= " << rs.speed_target << std::endl;
+    // std::cout << "speed_current = " << rs.speed_current << std::endl;
+    std::cout << "angle_target (RWheelVolt)= " << rs.angle_target << std::endl;
+    // std::cout << "angle_current = " << rs.angle_current << std::endl;
+    // std::cout << "angular_speed_target = " << rs.angular_speed_target << std::endl;
+    // std::cout << "angular_speed_current = " << rs.angular_speed_current << std::endl;
+    // std::cout << "vacuum_voltage = " << rs.vacuum_voltage << std::endl;
+    // std::cout << "action = " << rs.action << std::endl;
+    // std::cout << std::endl;
 
     // prepare the PACKET
     data[BYTE_POS_M2S_STARTBIT] = START_BIT;

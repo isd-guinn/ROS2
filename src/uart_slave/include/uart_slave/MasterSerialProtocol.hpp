@@ -69,17 +69,24 @@
   00  |   StartBit
   01  |   DebugCode
 
-  02  |   LeftFOCAngle
-  03  |   RightFOCAngle
-  
-  04  |   CheckSum
+  02  |   LeftFOCAngle   (1st Byte)
+  03  |   LeftFOCAngle   (2nd Byte)
+  04  |   LeftFOCAngle   (3rd Byte)
+  05  |   LeftFOCAngle   (4th Byte)
 
-  05  |   EndBit
+  06 |   RightFOCAngle  (1st Byte)
+  07 |   RightFOCAngle  (2nd Byte)
+  08 |   RightFOCAngle  (3rd Byte)
+  09 |   RightFOCAngle  (4th Byte)
+  
+  10  |   CheckSum
+
+  11  |   EndBit
 */
 
 
-#define M2S_PACKET_SIZE   34
-#define S2M_PACKET_SIZE   6
+#define M2S_PACKET_SIZE   35
+#define S2M_PACKET_SIZE   12
 
 /*        Byte Position Macros        */
 #define BYTE_POS_M2S_STARTBIT        0
@@ -100,9 +107,9 @@
 #define BYTE_POS_S2M_STARTBIT        0
 #define BYTE_POS_S2M_DEBUGCODE       1
 #define BYTE_POS_S2M_LEFTFOCANGLE    2
-#define BYTE_POS_S2M_RIGHTFOCANGLE   3
-#define BYTE_POS_S2M_CHECKSUM        4
-#define BYTE_POS_S2M_ENDBIT          5
+#define BYTE_POS_S2M_RIGHTFOCANGLE   6
+#define BYTE_POS_S2M_CHECKSUM        10
+#define BYTE_POS_S2M_ENDBIT          11
 
 #define START_BIT         0x3E
 #define END_BIT           0x3F

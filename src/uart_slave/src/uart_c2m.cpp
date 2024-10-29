@@ -114,16 +114,15 @@ private:
             motor_voltage.right = raw.MotorVolt_R;
             uart_pub_motorvoltage_->publish(motor_voltage);
 
-            std::cout << "Controller data received: ";
-            for (int i=0; i < C2M_PACKET_SIZE; i++)
-            {
-                std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
-            }
-            std::cout << std::endl;
+            // std::cout << "Controller data received: ";
+            // for (int i=0; i < C2M_PACKET_SIZE; i++)
+            // {
+            //     std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
+            // }
+            // std::cout << std::endl;
 
-            std::cout << "Controller Decoded Data: " << std::endl;
-            std::cout << "motor voltage left = " << raw.MotorVolt_L << std::endl;
-            std::cout << "motor voltage right = " << raw.MotorVolt_R << std::endl;
+            // std::cout << "Controller Decoded Data: " << std::endl;
+            std::cout << "motor voltage = " << raw.MotorVolt_L << " " << raw.MotorVolt_R << std::endl;
         }
         else {
             std::cout << "No data from Controller." << std::endl;
