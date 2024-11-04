@@ -386,12 +386,16 @@ def navigate(map_instance, car_x, car_y, is_moving, L_ang, R_ang):
 
 
     undiscovered = is_undiscovered(map_instance, x, y) # check grid around
-    print(undiscovered) 
-    if undiscovered["front"]:
+    print("Undiscovered: ", undiscovered) # debug
+    # print(undiscovered) 
+    # if undiscovered["front"]:
+    if undiscovered['front']:
         return go_straight()
-    elif undiscovered["left"]:
+    # elif undiscovered["left"]:
+    elif undiscovered['left']:
         return go_left()
-    elif undiscovered["right"]:
+    # elif undiscovered["right"]:
+    elif undiscovered['right']:
         return go_right()
     else:
         print("Navigating to nearest undiscovered areas...")
