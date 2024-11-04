@@ -4,6 +4,7 @@
 import math
 import time
 from . import mapping
+# import mapping
 
 # Create an instance of the Map class
 #map_instance = mapping.Map()
@@ -25,43 +26,46 @@ BACKWARD = 2
 ANTICLOCKWISE = 3
 CLOCKWISE = 4
 
-def read_sensors(map_instance):
-    global R_ang, L_ang, acel  # Declare all globals that will be modified
+# def #read_sensors(map_instance)
+# return:
+#     global R_ang, L_ang, acel  # Declare all globals that will be modified
 
-    # Read sensor data
-    # try:
-    #     R_ang = int(input("Enter right angle (R_ang): "))
-    #     L_ang = int(input("Enter left angle (L_ang): "))
-    #     acel = int(input("Enter acceleration (acel): "))
-    #     #x = int(input("Enter global x-coordinate: "))
-    #     #y = int(input("Enter global y-coordinate: "))
-    # except ValueError:
-    #     print("Invalid input. Defaulting to 0 for all.")
-    #     R_ang = L_ang = acel = 0
-    R_ang = L_ang = acel = 0
-    #print("x is now: ", x, "    y is now: ", y)
-    return x, y, direction
+#     Read sensor data
+#     try:
+#         R_ang = int(input("Enter right angle (R_ang): "))
+#         L_ang = int(input("Enter left angle (L_ang): "))
+#         acel = int(input("Enter acceleration (acel): "))
+#         #x = int(input("Enter global x-coordinate: "))
+#         #y = int(input("Enter global y-coordinate: "))
+#     except ValueError:
+#         print("Invalid input. Defaulting to 0 for all.")
+#         R_ang = L_ang = acel = 0
+#     R_ang = L_ang = acel = 0
+#     #print("x is now: ", x, "    y is now: ", y)
+#     return x, y, direction
 
 def go_straight():
     global x, y
     new_x, new_y = calculate_coordinates(x, y, "front", direction)
     print("Going straight")
     x, y = new_x, new_y
-    return 
+    return FORWARD
 
 def go_right():
     global x, y, direction
     new_x, new_y = calculate_coordinates(x, y, "right", direction)
     print("Going right")
-    x, y = new_x, new_y
+    #x, y = new_x, new_y
     direction = (direction + 90)%360
+    return CLOCKWISE
 
 def go_left():
     global x, y, direction
     new_x, new_y = calculate_coordinates(x, y, "left", direction)
     print("Going left")
-    x, y = new_x, new_y
+    #x, y = new_x, new_y
     direction = (direction + 360 - 90)%360
+    return ANTICLOCKWISE
 
 def calculate_coordinates(x, y, direction, car_direction):
     # Implementation remains unchanged
@@ -118,12 +122,15 @@ def calculate_coordinates(x, y, direction, car_direction):
     #print("Returning ", new_x, ", ", new_y)
     return new_x, new_y
 
-def mark_cells(map_instance, x, y):
+def mark_cells(map_instance, read_x, read_y, foc_left, foc_right, is_moving):
     """Mark cells based on current sensor readings."""
-    global wall_flag, last_wall_is_r
+    global wall_flag, last_wall_is_r, x, y, L_ang, R_ang
+
+    x, y = read_x, read_y
+    L_ang, R_ang = foc_left, foc_right
 
     map_instance.update_map(x, y, 'floor')
-    if acel == 0: # sth in front
+    if not is_moving: # sth in front
         front_x, front_y = calculate_coordinates(x, y, "front", direction)
         map_instance.update_map(front_x, front_y, 'wall')
         #print("Marked ", front_x, ",", front_y, "as wall")
@@ -142,7 +149,7 @@ def mark_cells(map_instance, x, y):
         wall_flag = True
         last_wall_is_r = True
 
-    if acel > 0: # moving -> front clear
+    if is_moving: # moving -> front clear
         front_x, front_y = calculate_coordinates(x, y, "front", direction)
         map_instance.update_map(front_x, front_y, 'floor')
         #print("Marked ", front_x, ",", front_y, "as floor")
@@ -283,8 +290,11 @@ def find_nearest_unclosed_wall(map_instance, robot_x, robot_y):
 
     return None  # Return None if no unclosed wall is found
 
-def follow_wall(map_instance):
-    global wall_flag
+def follow_wall(map_instance, car_x, car_y, car_direction, L_ang, R_ang, is_moving):
+    print("Following wall")
+    global wall_flag, x, y, direction
+    x, y = car_x, car_y
+    direction = car_direction
     # Robot should be still touching the wall right now
     # Get wall coordinates
     if last_wall_is_r:
@@ -292,94 +302,81 @@ def follow_wall(map_instance):
     else:
         wall_x, wall_y = calculate_coordinates(x, y, "left", direction)
     while not is_closed_wall(map_instance, wall_x, wall_y):
-        if acel == 0:
+        if not is_moving:
             if L_ang > 90:
-                go_right()
+                return go_right()
             elif R_ang > 90:
-                go_left()
-        elif acel > 0:
+                return go_left()
+        elif is_moving:
             # When lose touch with a wall
             if L_ang == 45 and R_ang == 45: 
                 print("Finding wall")
                 if last_wall_is_r:
-                    go_right()
+                    return go_right()
                 else:
-                    go_left()
+                    return go_left()
             else: 
-                go_straight()
-        map_instance.print_map(x, y, direction)
-        read_sensors(map_instance)
-        mark_cells(map_instance, x, y)
+                return go_straight()
 
-    wall_flag = False
+    else:
+        wall_flag = False
+        mapping.convert_corners_to_walls(map_instance)
+        return navigate(map_instance, x, y, is_moving, L_ang, R_ang)
     
 def go_to(map_instance, target_x, target_y):
+    """Navigate to a specific coordinate (target_x, target_y) step by step."""
     global x, y, direction
-    """Navigate to a specific coordinate (target_x, target_y)."""
-    print(f"Going to ({target_x}, {target_y})")
+
+    if (x, y) == (target_x, target_y):
+        return None  # Return None if the target is reached
     
-    while (x != target_x) or (y != target_y):
-        # Move in the x-direction
-        if x < target_x:  # Move right
-            direction = 90
-            for i in range( x + 1, target_x + 1):
-                if map_instance.map[y][i].status == 'w':
-                    break  # Stop if a wall is encountered
-                if map_instance.map[y][i].status == 'u':
-                    read_sensors(map_instance)
-                    mark_cells(map_instance, x, y)
-                x = i  # Move to the next position
-                map_instance.print_map(x, y, direction)
-            
-        elif x > target_x:  # Move left
-            direction = 270  
-            for i in range(x - 1, target_x - 1, -1):
-                if map_instance.map[y][i].status == 'w':
-                    break
-                if map_instance.map[y][i].status == 'u':
-                    read_sensors(map_instance)
-                    mark_cells(map_instance, x, y)
-                x = i
-                map_instance.print_map(x, y, direction)
-            
-        
-        # Move in the y-direction
-        if y < target_y:  # Move down
-            for j in range(y + 1, target_y + 1):
-                direction = 180
-                if map_instance.map[j][x].status == 'w':
-                    break 
-                if map_instance.map[y][i].status == 'u':
-                    read_sensors(map_instance)
-                    mark_cells(map_instance, x, y)
-                y = j  # Move to the next position
-                map_instance.print_map(x, y, direction)
-        elif y > target_y:  # Move up
-            for j in range(y - 1, target_y - 1, -1):
-                direction = 0
-                if map_instance.map[j][x].status == 'w':
-                    break
-                if map_instance.map[y][i].status == 'u':
-                    read_sensors(map_instance)
-                    mark_cells(map_instance, x, y)
-                y = j
-                map_instance.print_map(x, y, direction)
-        print("Going now: ", x, ", ", y)
+    # Move towards the target x-coordinate
+    if x < target_x:  # Need to move right
+        while direction != 90:  # Adjust direction to face right
+            return go_right() 
+        next_x = x + 1
+        if next_x < len(map_instance.map[0]) and map_instance.map[y][next_x].status != 'w':
+            x = next_x
+            return go_straight()  # Move right
 
-    return target_x, target_y
+    elif x > target_x:  # Need to move left
+        while direction != 270:  # Adjust direction to face left
+            return go_left()  # Implement your turn_left function
+        next_x = x - 1
+        if next_x >= 0 and map_instance.map[y][next_x].status != 'w':
+            x = next_x
+            return go_straight()  # Move left
 
-def navigate(map_instance):
-    global x, y, first_loop_done, action
+    # Move towards the target y-coordinate
+    if y < target_y:  # Need to move down
+        while direction != 180:  # Adjust direction to face down
+            return go_right()  # Implement your turn_right function
+        next_y = y + 1
+        if next_y < len(map_instance.map) and map_instance.map[next_y][x].status != 'w':
+            y = next_y
+            return go_straight  # Move down
 
+    elif y > target_y:  # Need to move up
+        while direction != 0:  # Adjust direction to face up
+            return go_left()  # Implement your turn_left function
+        next_y = y - 1
+        if next_y >= 0 and map_instance.map[next_y][x].status != 'w':
+            y = next_y
+            return go_straight  # Move up
+
+    # If the robot cannot move in any direction, handle accordingly
+    print("Cannot move towards target. Current position:", (x, y))
+    return None  # Return None if no valid action can be taken
+
+def navigate(map_instance, car_x, car_y, is_moving, L_ang, R_ang):
     """Main navigation function to decide actions based on sensor data."""
-    
-    mark_cells(map_instance, x, y) # mark wall/ floor
-    
+    print("Navigating")
+    global x, y, first_loop_done, direction, action
+    x, y = car_x, car_y
     
     if wall_flag:
-        follow_wall(map_instance)
+        follow_wall(map_instance, x, y, direction, L_ang, R_ang, is_moving)
         # wall_flag back to False
-        mapping.convert_corners_to_walls(map_instance)
 
     # #front_x, front_y = calculate_coordinates(x, y, "front", direction)
     # if first_loop_done: # Done first loop will start going inside
@@ -391,24 +388,18 @@ def navigate(map_instance):
     undiscovered = is_undiscovered(map_instance, x, y) # check grid around
     print(undiscovered) 
     if undiscovered["front"]:
-        go_straight()
-        action = FORWARD
-        return action
+        return go_straight()
     elif undiscovered["left"]:
-        go_left()
-        action = ANTICLOCKWISE
-        return action
+        return go_left()
     elif undiscovered["right"]:
-        go_right()
-        action = CLOCKWISE
-        return action
+        return go_right()
     else:
         print("Navigating to nearest undiscovered areas...")
         nearest = find_nearest_undiscovered_grid(map_instance)
         if nearest:
             target_x, target_y = nearest
             print(f"Going to nearest undiscovered grid at ({target_x}, {target_y}).")
-            x, y = go_to(map_instance, target_x, target_y)
+            return go_to(map_instance, target_x, target_y)
         else:
             print("No more undiscovered area")
     #print("Navigation returning: ", x, ", ", y)
