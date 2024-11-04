@@ -10,7 +10,7 @@
 #include <iostream>
 #include <iomanip>
 
-// /*
+/*
 bool check_start(const int uart_fd_)
 {
     static uint8_t first_bit[1] = {0};

@@ -26,9 +26,10 @@
 extern "C"{
 #endif
 
-#define BAUD          (B115200)
-#define SLAVE_SERIAL  ("/dev/ttyAMA10") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
-#define DEG_TO_RAD  (0.01745329)
+#define BAUD                (B115200)
+#define SLAVE_SERIAL     ("/dev/ttyAMA10") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
+// #define SLAVE_SERIAL        ("/dev/ttyAMA0") // if GPIO UART: "/dev/ttyAMA0"
+#define DEG_TO_RAD          (0.01745329)
 #ifdef __cplusplus
 }
 #endif
@@ -74,7 +75,7 @@ public:
         uart_sub_action_ = this->create_subscription<std_msgs::msg::UInt8>("Robot_action", 10, std::bind(&UartPublisher::algo_callback, this, std::placeholders::_1));
         
         // send data to slave every 1s
-        timer_ = this->create_wall_timer(100ms, std::bind(&UartPublisher::timer_callback, this));
+        timer_ = this->create_wall_timer(18ms, std::bind(&UartPublisher::timer_callback, this));
     }
 
 private:

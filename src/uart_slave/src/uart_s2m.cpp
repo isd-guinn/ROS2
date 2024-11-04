@@ -25,9 +25,10 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-#define BAUD          (B115200)
-#define SLAVE_SERIAL  ("/dev/ttyAMA10") // if on-board UART: "/dev/ttyAMA10" equals to "/dev/serial0" - debug UART port
-#define DEG_TO_RAD  (0.01745329)
+#define BAUD                (B115200)
+#define SLAVE_SERIAL     ("/dev/ttyAMA10") // if On-board UART: "/dev/ttyAMA10" equals to "/dev/serial0"
+// #define SLAVE_SERIAL        ("/dev/ttyAMA0") // if GPIO UART: "/dev/ttyAMA0"
+#define DEG_TO_RAD          (0.01745329)
 #ifdef __cplusplus
 }
 #endif
@@ -46,7 +47,7 @@ public:
     {
         uart_fd_ = open_serial();
         uart_pub_focangle_ = this->create_publisher<uart_slave::msg::FocAngle>("/FOC_angle", 10);
-        timer_ = this->create_wall_timer(100ms, std::bind(&UartReceiver::timer_callback, this));
+        timer_ = this->create_wall_timer(18ms, std::bind(&UartReceiver::timer_callback, this));
     }
     ~UartReceiver()
     {
@@ -68,6 +69,19 @@ private:
         num_bytes = 0;
         
         uint8_t first_bit[1] = {0};
+        std::cout << "Slave's uart_fd_ = " << uart_fd_ << std::endl;
+
+        // if the serial is not connected at start, connect now:
+        if (uart_fd_ == -1){
+            std::cout << "Slave not connected. Reconnecting......" << std::endl;
+            close(uart_fd_);
+            uart_fd_ = open_serial();
+            if (uart_fd_ == -1){
+                std::cout << "Slave still not connected. Wait for next timer_callback." << std::endl;
+                std::cout << "----------------------" << std::endl;
+                return;
+            }
+        }
 
         // check the bytes one by one until get the start bit
         while (first_bit[0] != START_BIT)
@@ -97,6 +111,7 @@ private:
 
         if (rev){
             // successfully decoded the data
+            // still in Radian
             foc_angle.left = raw.foc_left;
             foc_angle.right = raw.foc_right;
 
@@ -106,12 +121,12 @@ private:
 
             uart_pub_focangle_->publish(foc_angle);
 
-            // std::cout << "Slave data received: ";
-            // for (int i=0; i < S2M_PACKET_SIZE; i++)
-            // {
-            //     std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
-            // }
-            // std::cout << std::endl;
+            std::cout << "Slave data received: ";
+            for (int i=0; i < S2M_PACKET_SIZE; i++)
+            {
+                std::cout << std::hex << static_cast<int>(Rx_buffer[i]) << " ";
+            }
+            std::cout << std::endl;
         }
         else {
             std::cout << "No data is received." << std::endl;
