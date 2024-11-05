@@ -19,6 +19,30 @@ float precision( float value, int precision )
     return std::round(value * n) / n ;
 }
 
+void yaw_calibrate(position_t *data, const float init_yaw){
+    float temp = (data->yaw_z - init_yaw) * -1;
+    if (temp > 180.0) temp -= 360.0;
+    if (temp < -180.0) temp += 360.0;
+    data->yaw_z_calibrated = temp;
+}
+
+// calibration mapping of angle using angulae acceleration
+/*
+float angle_calibration(float angle)
+{
+    float pos_x = 180.0; // reading when finished a full clockwise circle
+    float neg_x = -180.0; // reading when finished a full counter-clockwise circle
+    if (angle > pos_x) angle -= 360;
+    if (angle < neg_x) angle += 360;
+    // redistribute the angle -- in deg
+    if (angle < pos_x && angle > 0.0) angle = angle/pos_x * 360.0;
+    else if (angle > neg_x && angle < 0.0) angle = angle/neg_x * 360.0;
+    else {std::cout << "ERROR! Angle is out of range" << std::endl; return 0.0;}
+
+    return angle;
+}
+// */
+
 double dead_reckon(position_t *data, double &last_update_time)
 {
     // double dt = 0.1; // 100ms time step (assuming constant for simplicity)
@@ -59,37 +83,6 @@ double dead_reckon(position_t *data, double &last_update_time)
 
     last_update_time = current_time;
     return elapsed_time;
-}
-
-void update_angle(position_t *data, double elapsed_time){
-    if (elapsed_time == NULL) {
-        std::cout << "Elapsed time is 0" << std::endl;
-        return;
-    }
-    
-    // double dt = 0.1;
-    // data->angle_z += data->angVel_z_current * dt;
-
-    // low-pass filter for angular velocity
-    float alpha = 0.2;
-    float temp = data->angle_z / DEG_TO_RAD;
-    std::cout << "previous Angle (degree): " << temp << std::endl;
-    float temp2 = data->angVel_z_previous / DEG_TO_RAD;
-    std::cout << "previous AngVel: " << temp2 << std::endl;
-    float temp3 = data->angVel_z_current / DEG_TO_RAD;
-    std::cout << "measured AngVel: " << temp3 << std::endl;
-    data->angVel_z_current = (1 - alpha) * data->angVel_z_previous + alpha * data->angVel_z_current;
-    if (abs(data->angVel_z_current) < 0.003) data->angVel_z_current = 0;
-    float temp4 = data->angVel_z_current / DEG_TO_RAD;
-    std::cout << "filtered AngVel: " << temp4 << std::endl;
-
-    // integrate to get angle
-    data->angle_z += data->angVel_z_current * elapsed_time;
-    float temp5 = data->angle_z / DEG_TO_RAD;
-    std::cout << "Updated Angle: " << temp5 << std::endl;
-
-    // save current acceleration for next iteration
-    data->angVel_z_previous = data->angVel_z_current;
 }
 
 Eigen::Matrix3f quaternionToRotationMatrix(Eigen::Quaternionf quat) 
