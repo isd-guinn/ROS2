@@ -19,6 +19,7 @@ using namespace std::chrono_literals;
 using namespace std;
 
 position_t local_data;
+IEKF_DeadReckoning iekf;
 
 // double last_update_time = 0;
 
@@ -31,7 +32,7 @@ class IMUProcessor : public rclcpp::Node
 			local_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_local", 20);
 			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_global", 20);
 			
-			timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
+			// timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
 		}
 		double last_update_time = 0;
 
@@ -44,24 +45,23 @@ class IMUProcessor : public rclcpp::Node
 
 		// callback for pub the integrated imu delta-position (x & y)
         void rawimu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
-			// retreive data from msg
+			// retrieve accleration readings
 			local_data.acc_measured << 	precision(msg->linear_acceleration.x, 10), 
 										precision(msg->linear_acceleration.y, 10), 
 										precision(msg->linear_acceleration.z, 10);
+			local_data.acc << 	precision(msg->linear_acceleration.x, 10), 
+								precision(msg->linear_acceleration.y, 10), 
+								precision(msg->linear_acceleration.z, 10);
+			// retrieve quaternion readings
 			local_data.quat.w() = precision(msg->orientation.w, 10);
 			local_data.quat.x() = precision(msg->orientation.x, 10);
 			local_data.quat.y() = precision(msg->orientation.y, 10);
 			local_data.quat.z() = precision(msg->orientation.z, 10);
-			// local_data.quat = (precision(msg->orientation.w, 10),
-			// 					precision(msg->orientation.x, 10), 
-			// 					precision(msg->orientation.y, 10), 
-			// 					precision(msg->orientation.z, 10));
-			// local_data.acc_measured.x = precision(msg->linear_acceleration.x, 10);
-    		// local_data.acc_measured.y = precision(msg->linear_acceleration.y, 10);
-			// local_data.quat.x = precision(msg->orientation.x, 10);
-			// local_data.quat.y = precision(msg->orientation.y, 10);
-			// local_data.quat.z = precision(msg->orientation.z, 10);
-			// local_data.quat_w = precision(msg->orientation.w, 10);
+			local_data.quaternion << 	precision(msg->orientation.w, 10), 
+										precision(msg->orientation.x, 10), 
+										precision(msg->orientation.y, 10), 
+										precision(msg->orientation.z, 10);
+			// retrieve angular velocity readings
 			local_data.angVel_z_current = precision(msg->angular_velocity.z, 10);
 			std::cout << "---------------------------" << std::endl;
 
@@ -73,6 +73,28 @@ class IMUProcessor : public rclcpp::Node
 
 			// Eigen::Array3f gravity_local = distributeGravity(RotationalMatrix);
 			// std::cout << "Gravity in local frame: " << gravity_local << std::endl;
+
+		/* TESTING THE IEKF */
+			iekf.predict();
+        	iekf.update(local_data.acc, local_data.quaternion);
+
+			if (iekf.isStatic()) {
+				std::cout << "Robot is static" << std::endl;
+			} else if (iekf.isConstantVelocity()) {
+				std::cout << "Robot is moving with constant velocity" << std::endl;
+			} else {
+				std::cout << "Robot is accelerating" << std::endl;
+			}
+
+			// Get estimated state
+			auto position = iekf.getPosition();
+			auto velocity = iekf.getVelocity();
+			auto orientation = iekf.getOrientation();
+
+			std::cout << "Position: " << position.transpose() << std::endl;
+			std::cout << "Velocity: " << velocity.transpose() << std::endl;
+			std::cout << "Orientation: " << orientation.transpose() << std::endl;
+		/* END OF TESTING THE IEKF */
 
 			// process the receive message
 			double elapse_time = dead_reckon(&local_data, last_update_time);
@@ -86,6 +108,7 @@ class IMUProcessor : public rclcpp::Node
 
         }
 
+		/*
 		void timer_callback(){
 			auto local = imu_process::msg::Position();
 			// auto global = imu_process::msg::Position();
@@ -107,6 +130,7 @@ class IMUProcessor : public rclcpp::Node
 			local.header.frame_id = "base_link"; // the frame that this data is associated with
             local_pos_pub_->publish(local); 
 		}
+		// */
 };
 
 int main(int argc,const char* argv[])

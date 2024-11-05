@@ -31,13 +31,13 @@ double dead_reckon(position_t *data, double &last_update_time)
 
     if (elapsed_time == 0) {
         std::cout << "Elapsed time is 0" << std::endl;
-        return NULL;
+        return 0.0; // NULL
     }
 
     if (elapsed_time > 0.1) {
         std::cout << "Elapsed time is too large" << std::endl;
         last_update_time = double_t(rclcpp::Clock().now().seconds());
-        return NULL;
+        return 0.0; // NULL
     }
 
     // estimate
