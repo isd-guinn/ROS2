@@ -24,6 +24,9 @@ typedef struct
 
     Eigen::Quaternionf quat = Eigen::Quaternionf(0.0, 0.0, 0.0, 0.0); // w, x, y, z
 
+    // for storing 10 rows of historical acceleration data for calibration
+    Eigen::Matrix<float, 10, 3> acc_history;
+
     // for testing the IEKF
     Eigen::Matrix<float, 3, 1> acc{{0.0, 0.0, 0.0}}; // acceleration in m/s^2
     Eigen::Matrix<float, 4, 1> quaternion{{0.0, 0.0, 0.0, 0.0}}; // quaternion (w,x,y,z)

@@ -43,6 +43,7 @@ float angle_calibration(float angle)
 }
 // */
 
+// Ignoring the acc_z for now -- assuming the robot is on a flat surface
 double dead_reckon(position_t *data, double &last_update_time)
 {
     // double dt = 0.1; // 100ms time step (assuming constant for simplicity)
@@ -68,13 +69,28 @@ double dead_reckon(position_t *data, double &last_update_time)
     data->vel_predict = data->vel_prev;
     data->acc_predict.setZero();
     data->pos_predict = data->pos_prev + data->vel_prev * elapsed_time;
-    std::cout << "Predicted Position: " << data->pos_predict.transpose() << std::endl;
     std::cout << "Predicted Velocity: " << data->vel_predict.transpose() << std::endl;
+    std::cout << "Predicted Position: " << data->pos_predict.transpose() << std::endl;
 
     data->acc_final = (1-alpha) * data->acc_predict + alpha * data->acc_measured;
-    if (abs(data->acc_final(0)) < 0.05) data->acc_final(0) = 0;
-    if (abs(data->acc_final(1)) < 0.05) data->acc_final(1) = 0;
+    std::cout << "Weighted Acceleration: " << data->acc_final.transpose() << std::endl;
+    if (abs(data->acc_final(0)) < 0.015) data->acc_final(0) = 0;
+    if (abs(data->acc_final(1)) < 0.015) data->acc_final(1) = 0;
+    // push the existing history data to one row down
+    data->acc_history.block<9, 3>(1, 0) = data->acc_history.block<9, 3>(0, 0);
+    // push the acceleration data to the history
+    data->acc_history.block<1, 3>(0, 0) = data->acc_final;
+    std::cout << "Acceleration History: " << std::endl;
+    std::cout << data->acc_history << std::endl;
+
     data->vel_final = data->vel_prev + alpha * data->acc_final * elapsed_time;
+    // if **consecutively 10 reading** of acceleration is zero, then assume robot stopped
+    for (int i = 0; i < 2; i++) {
+        if (data->acc_history.col(i).isZero()) {
+            std::cout << "historical acc_" << i << " is zero" << std::endl;
+            data->vel_final(i) = 0;
+        }
+    }
     data->pos_final = data->pos_prev + data->vel_prev * elapsed_time + 0.5 * alpha * data->acc_final * elapsed_time * elapsed_time;
 
     data->acc_prev = data->acc_final;

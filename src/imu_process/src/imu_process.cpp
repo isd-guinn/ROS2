@@ -37,6 +37,8 @@ class IMUProcessor : public rclcpp::Node
 			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_global", 20);
 			
 			// timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
+
+			local_data.acc_history.setZero();
 		}
 		double last_update_time = 0;
 
@@ -49,8 +51,7 @@ class IMUProcessor : public rclcpp::Node
 
 		void euler_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
 			local_data.yaw_z = msg->yaw_z / DEG_TO_RAD;
-			std::cout << "Absolute Angle (z): " << local_data.yaw_z << std::endl;
-			std::cout << "Init Angle (z): " << init_yaw << std::endl;
+			std::cout << "Absolute Angle (z): " << local_data.yaw_z << " || Init angle (z): " << init_yaw << std::endl;
 			if (init_count == 0) {
 				// should only enter this loop when init start receiving the data
 				init_count++;
@@ -88,11 +89,11 @@ class IMUProcessor : public rclcpp::Node
 
 			std::cout << "Measured Acceleration: " << local_data.acc_measured.transpose() << std::endl;
 			// std::cout << "Measured acc (matrix): " << local_data.acc << std::endl; // debug
-			Eigen::Matrix3f RotationalMatrix = quaternionToRotationMatrix(local_data.quat);
-			std::cout << "Quaternion: " << local_data.quat << std::endl;
+			// Eigen::Matrix3f RotationalMatrix = quaternionToRotationMatrix(local_data.quat);
+			// std::cout << "Quaternion: " << local_data.quat << std::endl;
 			// std::cout << "quat (matrix): " << local_data.quaternion << std::endl; // debug
-			std::cout << "Rotational Matrix: " << std::endl;
-			std::cout << RotationalMatrix << std::endl;
+			// std::cout << "Rotational Matrix: " << std::endl;
+			// std::cout << RotationalMatrix << std::endl;
 
 			// Eigen::Array3f gravity_local = distributeGravity(RotationalMatrix);
 			// std::cout << "Gravity in local frame: " << gravity_local << std::endl;
@@ -126,9 +127,9 @@ class IMUProcessor : public rclcpp::Node
 			double elapse_time = dead_reckon(&local_data, last_update_time);
 			std::cout << "Elapsed Time: " << elapse_time << std::endl;
 
-			std::cout << "Final Position: " << local_data.pos_final.transpose() << std::endl;
-			std::cout << "Final Velocity: " << local_data.vel_final.transpose() << std::endl;
 			std::cout << "Final Acceleration: " << local_data.acc_final.transpose() << std::endl;
+			std::cout << "Final Velocity: " << local_data.vel_final.transpose() << std::endl;
+			std::cout << "Final Position: " << local_data.pos_final.transpose() << std::endl;
 			std::cout << "---------------------------" << std::endl;
 
         }
