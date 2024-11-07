@@ -85,15 +85,18 @@ class NavAlgo(Node):
         # get data from message
         self.vel_x = round(msg.vel_x, 10)
         self.vel_y = round(msg.vel_y, 10)
+        self.angle_z = round(msg.angle_z, 1)
         self.get_logger().info("self.vel_x: %f, self.vel_y: %f" % (self.vel_x, self.vel_y))
+
+        old_ang = self.angle_z
         
         # calculate the distance
         self.distance_counter, self.reach_distance, self.dt = calculate_distance(self, self.distance_counter, self.vel_x, self.reach_distance, self.dt)
         
         # threshold for determining if the robot is moving
-        threshold = 0.0001
+        THRESHOLD = 0.0001
         
-        if self.vel_x > threshold:
+        if self.vel_x > THRESHOLD:
             self.is_moving = True
         self.get_logger().info("self.is_moving: %s" % self.is_moving)
         
@@ -111,6 +114,29 @@ class NavAlgo(Node):
             action_msg.data = action
             self.get_logger().info("action_msg.data: %d" % action_msg.data)
             self.nav_pub_action_.publish(action_msg)
+
+        # STOP = 0
+        # FORWARD = 1
+        # BACKWARD = 2
+        # ANTICLOCKWISE = 3
+        # CLOCKWISE = 4
+        if action == 3:
+            dang = 90
+        elif action == 4:
+            dang = -90
+        else:
+            dang = 0
+        
+        ANG_THRESHOLD = 0.1
+        new_ang = (old_ang + 360 + dang) % 360
+        start_time = time.time()  
+
+        while (self.angle_z < new_ang - ANG_THRESHOLD) or (self.angle_z > new_ang + ANG_THRESHOLD):
+            if time.time() - start_time > 5:  # Check if more than 5 seconds have passed
+                print("Error: Stuck in angle check loop for more than 5 seconds.")
+                break
+            time.sleep(0.01)
+
         
         # reset the boolean
         self.get_logger().info("Resetting the boolean variables.....")
