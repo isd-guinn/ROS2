@@ -5,6 +5,9 @@ FROM <BaseImage>
 # sudo ln -sf eigen3/Eigen Eigen
 # sudo ln -sf eigen3/unsupported unsupported
 
+docker cp ~/guinn-ROS2/src 87fcdca2156f:/ros2_ws
+docker exec -it 87fcdca2156f bash
+
 cd /ros2_ws
 source /ros2_ws/install/setup.bash
 colcon build --packages-select serial_imu
@@ -52,7 +55,7 @@ UART =  (GPIO) /dev/ttyAMA0
         (onboard) /dev/ttyAMA10 or /dev/serial0
 CONTROLLER = /dev/ttyACM0 or /dev/ttyACM1
 -----------------------------------
-sudo systemctl start(or stop) ros2_docker.service
+sudo systemctl start(or stop/restart) ros2_docker.service
 sudo systemctl status ros2_docker.service
 -----------------------------------
 current:
@@ -61,3 +64,13 @@ current:
 optional:
 # can use `udevadm info --attribute-walk --name=/dev/ttyUSB0` to check detail info
 [] plot graph
+
+// calibration attempt
+1 meter
+y = -1.16044e-07
+y = 1.23811e-06 (reverse direction)
+y = -1.89215e-06
+
+issue:
+when moving forward/backward (y-direction),
+x-direction also record similar or larger acceleration

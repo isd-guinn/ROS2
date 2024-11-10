@@ -36,7 +36,7 @@ class IMUProcessor : public rclcpp::Node
 			local_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_local", 20);
 			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_global", 20);
 			
-			// timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
+			timer_ = this->create_wall_timer(500ms, std::bind(&IMUProcessor::timer_callback, this));
 
 			local_data.acc_history.setZero();
 		}
@@ -136,6 +136,7 @@ class IMUProcessor : public rclcpp::Node
 
 		// /*
 		void timer_callback(){
+			RCLCPP_INFO(this->get_logger(), "Publishing Local Position");
 			auto local = imu_process::msg::Position();
 			// auto global = imu_process::msg::Position();
 
@@ -155,6 +156,7 @@ class IMUProcessor : public rclcpp::Node
 			local.header.stamp = rclcpp::Clock().now();
 			local.header.frame_id = "base_link"; // the frame that this data is associated with
             local_pos_pub_->publish(local); 
+			std::cout << "Published Local Position" << std::endl;
 		}
 		// */
 };

@@ -31,11 +31,18 @@ find_package(builtin_interfaces REQUIRED)
 find_package(imu_process REQUIRED)
 find_package(uart_slave REQUIRED)
 
+find_package(rosidl_default_generators REQUIRED)
+
 ###########
 ## Build ##
 ###########
 
 include_directories(include)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Position.msg"
+  DEPENDENCIES std_msgs builtin_interfaces
+)
 
 # # Create Cpp executable
 # add_executable(cpp_executable src/cpp_node.cpp)

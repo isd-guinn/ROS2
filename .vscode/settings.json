@@ -94,5 +94,6 @@
         "valarray": "cpp",
         "variant": "cpp",
         "core": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/guinn/guinn-ROS2/src/imu_process"
 }

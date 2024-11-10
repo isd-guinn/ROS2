@@ -1,0 +1,10 @@
+[0.000000] (-) TimerEvent: {}
+[0.000310] (-) JobUnselected: {'identifier': 'nav_algo'}
+[0.000542] (-) JobUnselected: {'identifier': 'serial_6dof_imu_cpp'}
+[0.000866] (-) JobUnselected: {'identifier': 'serial_imu'}
+[0.001272] (-) JobUnselected: {'identifier': 'serial_test_py'}
+[0.001336] (-) JobUnselected: {'identifier': 'uart_slave'}
+[0.001411] (imu_process) JobQueued: {'identifier': 'imu_process', 'dependencies': OrderedDict({'serial_imu': '/home/guinn/guinn-ROS2/install/serial_imu'})}
+[0.001499] (imu_process) JobStarted: {'identifier': 'imu_process'}
+[0.019986] (imu_process) JobEnded: {'identifier': 'imu_process', 'rc': 1}
+[0.031771] (-) EventReactorShutdown: {}
