@@ -13,7 +13,7 @@ ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
 docker buildx build --load --platform linux/arm64 -t <image_name> .
 docker images # to check whether image is successfully built
 xhost +
-docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 <image_name>
+docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 --network=host <image_name>
 ```
     > For windows host env: 
     > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it --platform linux/arm64 <image_name>`
