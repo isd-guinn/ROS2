@@ -58,7 +58,6 @@ include_directories(
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-# to be updated !!!!
 add_executable(m2s_sender 
                src/uart_m2s.cpp)
 ament_target_dependencies(m2s_sender 
