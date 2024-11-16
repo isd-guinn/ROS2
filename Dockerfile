@@ -38,6 +38,11 @@ RUN bash -c "source ~/.bashrc"
 WORKDIR /ros2_ws
 
 RUN apt-get update && apt-get install -y ros-humble-imu-tools
+RUN apt-get install -y \
+    iproute2 \
+    can-utils \
+    ros-humble-can-msgs \
+    ros2-humble-ros2-socketcan-msgs
 
 RUN rosdep install --from-paths src --ignore-src -r -y
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh

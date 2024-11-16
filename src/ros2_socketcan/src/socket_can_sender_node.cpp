@@ -35,7 +35,7 @@ namespace drivers
     {
       interface_ = this->declare_parameter("interface", "can0");
       enable_fd_ = this->declare_parameter("enable_can_fd", false);
-      double timeout_sec = this->declare_parameter("timeout_sec", 0.01);
+      double timeout_sec = this->declare_parameter("timeout_sec", 1.0); // change here to change the interval of the receiver
       timeout_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
           std::chrono::duration<double>(timeout_sec));
 
@@ -61,6 +61,7 @@ namespace drivers
       }
 
       RCLCPP_DEBUG(this->get_logger(), "Sender successfully configured.");
+      RCLCPP_INFO(this->get_logger(), "Sender successfully configured.");
 
       if (!enable_fd_)
       {
@@ -73,6 +74,8 @@ namespace drivers
             "to_can_bus_fd", 500, std::bind(&SocketCanSenderNode::on_fd_frame, this, std::placeholders::_1));
       }
 
+      RCLCPP_INFO(this->get_logger(), "TopicSubscription successfully configured.");
+
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -80,6 +83,7 @@ namespace drivers
     {
       (void)state;
       RCLCPP_DEBUG(this->get_logger(), "Sender activated.");
+      RCLCPP_INFO(this->get_logger(), "Sender activated.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -87,6 +91,7 @@ namespace drivers
     {
       (void)state;
       RCLCPP_DEBUG(this->get_logger(), "Sender deactivated.");
+      RCLCPP_INFO(this->get_logger(), "Sender deactivated.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -104,6 +109,7 @@ namespace drivers
       }
 
       RCLCPP_DEBUG(this->get_logger(), "Sender cleaned up.");
+      RCLCPP_INFO(this->get_logger(), "Sender cleaned up.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -111,6 +117,7 @@ namespace drivers
     {
       (void)state;
       RCLCPP_DEBUG(this->get_logger(), "Sender shutting down.");
+      RCLCPP_INFO(this->get_logger(), "Sender shutting down.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -135,6 +142,7 @@ namespace drivers
         CanId send_id = msg->is_extended ? CanId(msg->id, 0, type, ExtendedFrame) : CanId(msg->id, 0, type, StandardFrame);
         try
         {
+          RCLCPP_INFO(this->get_logger(), "Sending CAN message: %s", interface_.c_str());
           sender_->send(msg->data.data(), msg->dlc, send_id, timeout_ns_);
         }
         catch (const std::exception &ex)

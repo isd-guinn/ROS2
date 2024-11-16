@@ -1,8 +1,8 @@
 # for documenting the CLI commands for testing & debug
 FROM <BaseImage>
 
-docker cp ~/guinn-ROS2/src 857da406428e:/ros2_ws
-docker exec -it 857da406428e bash
+docker cp ~/guinn-ROS2/src 7af6d4b88b32:/ros2_ws
+docker exec -it 7af6d4b88b32 bash
 
 cd /ros2_ws
 source /ros2_ws/install/setup.bash
@@ -10,12 +10,15 @@ colcon build --packages-select serial_imu
 colcon build --packages-select uart_slave
 colcon build --packages-select imu_process
 colcon build --packages-select nav_algo
+colcon build --packages-select ros2_socketcan
 
 ## to launch:
 ## ros2 launch serial_imu imu_spec_msg.launch.py
 ## ros2 launch uart_slave uart_slave.launch.py
 ## ros2 launch imu_process imu_processor.launch.py
 ## ros2 launch nav_algo nav_algo.launch.py
+## ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
+## ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
 
 chmod +x /ros2_ws/install/nav_algo/lib/nav_algo/nav_algo_node.py 
 
@@ -51,6 +54,13 @@ UART =  (GPIO) /dev/ttyAMA0
         (onboard) /dev/ttyAMA10 or /dev/serial0
 CONTROLLER = /dev/ttyACM0 or /dev/ttyACM1
 CAN = /sys/bus/spi/devices/spi0.0/net/can0
+-----------------------------------
+To display CAN device details:
+ip -details -statistics link show can0
+To send dummy message:
+cansend can0 000#00.00 (or use PCAN and USB-to-CAN)
+To show upcoming received message:
+candump can0
 -----------------------------------
 sudo systemctl start(or stop/restart) ros2_docker.service
 sudo systemctl status ros2_docker.service

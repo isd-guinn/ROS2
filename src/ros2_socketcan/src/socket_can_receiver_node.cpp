@@ -38,7 +38,7 @@ namespace drivers
       interface_ = this->declare_parameter("interface", "can0");
       use_bus_time_ = this->declare_parameter<bool>("use_bus_time", false);
       enable_fd_ = this->declare_parameter<bool>("enable_can_fd", false);
-      double interval_sec = this->declare_parameter("interval_sec", 0.01);
+      double interval_sec = this->declare_parameter("interval_sec", 1.0); // change here to change the interval of the receiver
       this->declare_parameter("filters", "0:0");
       interval_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
           std::chrono::duration<double>(interval_sec));
@@ -66,19 +66,24 @@ namespace drivers
         RCLCPP_ERROR(
             this->get_logger(), "Error opening CAN receiver: %s - %s",
             interface_.c_str(), ex.what());
+        RCLCPP_INFO(get_logger(), "Error opening CAN receiver: %s - %s",
+            interface_.c_str(), ex.what());
         return LNI::CallbackReturn::FAILURE;
       }
 
       RCLCPP_DEBUG(this->get_logger(), "Receiver successfully configured.");
+      RCLCPP_INFO(get_logger(), "Receiver successfully configured.");
 
       if (!enable_fd_)
       {
-        frames_pub_ = this->create_publisher<can_msgs::msg::Frame>("from_can_bus", 500);
+        RCLCPP_INFO(get_logger(), "Creating publisher for can_msgs::msg::Frame");
+        frames_pub_ = this->create_publisher<can_msgs::msg::Frame>("/from_can_bus", 500);
       }
       else
       {
+        RCLCPP_INFO(get_logger(), "Creating publisher for ros2_socketcan_msgs::msg::FdFrame");
         fd_frames_pub_ =
-            this->create_publisher<ros2_socketcan_msgs::msg::FdFrame>("from_can_bus_fd", 500);
+            this->create_publisher<ros2_socketcan_msgs::msg::FdFrame>("/from_can_bus_fd", 500);
       }
 
       receiver_thread_ = std::make_unique<std::thread>(&SocketCanReceiverNode::receive, this);
@@ -92,14 +97,17 @@ namespace drivers
 
       if (!enable_fd_)
       {
+        RCLCPP_INFO(get_logger(), "Activating publisher for can_msgs::msg::Frame");
         frames_pub_->on_activate();
       }
       else
       {
+        RCLCPP_INFO(get_logger(), "Activating publisher for ros2_socketcan_msgs::msg::FdFrame");
         fd_frames_pub_->on_activate();
       }
 
       RCLCPP_DEBUG(this->get_logger(), "Receiver activated.");
+      RCLCPP_INFO(get_logger(), "Receiver activated.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -109,14 +117,17 @@ namespace drivers
 
       if (!enable_fd_)
       {
+        RCLCPP_INFO(get_logger(), "Deactivating publisher for can_msgs::msg::Frame");
         frames_pub_->on_deactivate();
       }
       else
       {
+        RCLCPP_INFO(get_logger(), "Deactivating publisher for ros2_socketcan_msgs::msg::FdFrame");
         fd_frames_pub_->on_deactivate();
       }
 
       RCLCPP_DEBUG(this->get_logger(), "Receiver deactivated.");
+      RCLCPP_INFO(get_logger(), "Receiver deactivated.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -126,10 +137,12 @@ namespace drivers
 
       if (!enable_fd_)
       {
+        RCLCPP_INFO(get_logger(), "Cleaning up publisher for can_msgs::msg::Frame");
         frames_pub_.reset();
       }
       else
       {
+        RCLCPP_INFO(get_logger(), "Cleaning up publisher for ros2_socketcan_msgs::msg::FdFrame");
         fd_frames_pub_.reset();
       }
 
@@ -138,6 +151,7 @@ namespace drivers
         receiver_thread_->join();
       }
       RCLCPP_DEBUG(this->get_logger(), "Receiver cleaned up.");
+      RCLCPP_INFO(get_logger(), "Receiver cleaned up.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
@@ -145,12 +159,14 @@ namespace drivers
     {
       (void)state;
       RCLCPP_DEBUG(this->get_logger(), "Receiver shutting down.");
+      RCLCPP_INFO(get_logger(), "Receiver shutting down.");
       return LNI::CallbackReturn::SUCCESS;
     }
 
     void SocketCanReceiverNode::receive()
     {
       CanId receive_id{};
+      RCLCPP_INFO(get_logger(), "Starting receiver thread");
 
       if (!enable_fd_)
       {

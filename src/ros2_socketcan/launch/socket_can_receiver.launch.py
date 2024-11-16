@@ -44,7 +44,7 @@ def generate_launch_description():
         namespace=TextSubstitution(text=''),
         # parameters are passed to the node from launch.xml
         parameters=[{
-            # get the value of the 'interface' argument from the launch file
+            # get the value of the 'interface' argument
             # using the LaunchConfiguration substitution
             # then pass it to the node as a parameter called 'interface'
             'interface': LaunchConfiguration('interface'), 

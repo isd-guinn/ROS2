@@ -21,25 +21,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
-find_package(rclcpp REQUIRED)
-find_package(ament_cmake REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
+# find_package(rclcpp REQUIRED)
+# find_package(rclcpp_components REQUIRED)
+# find_package(rclcpp_lifecycle REQUIRED)
+# find_package(lifecycle_msgs REQUIRED)
+# find_package(can_msgs REQUIRED)
+find_package(ros2_socketcan_msgs REQUIRED)
+
+# find_package(ament_cmake REQUIRED)
+# find_package(std_msgs REQUIRED)
+# find_package(ament_cmake_auto REQUIRED)
 # ament_auto_find_build_dependencies()
-
-find_package(builtin_interfaces REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-
-ament_export_dependencies(rosidl_default_runtime)
-
-set(msg_files
-"msg/CanFrame.msg"
-)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-  DEPENDENCIES std_msgs builtin_interfaces
-)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -60,8 +55,8 @@ include_directories(
   include
 )
 
-rosidl_get_typesupport_target(cpp_typesupport_target
-  ${PROJECT_NAME} rosidl_typesupport_cpp)
+# rosidl_get_typesupport_target(cpp_typesupport_target
+#   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/socket_can_common.cpp
