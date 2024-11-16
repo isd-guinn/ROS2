@@ -14,6 +14,10 @@
 #
 # Co-developed by Tier IV, Inc. and Apex.AI, Inc.
 
+## to launch:
+## ros2 launch ros2_socketcan socket_can_sender.launch.py
+## optional: specifying the variables
+## ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can1
 
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, EmitEvent,
@@ -22,6 +26,7 @@ from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessStart
 from launch.events import matches_action
 from launch.substitutions import LaunchConfiguration, TextSubstitution
+
 from launch_ros.actions import LifecycleNode
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
@@ -79,8 +84,8 @@ def generate_launch_description():
         DeclareLaunchArgument('interface', default_value='can0'),
         DeclareLaunchArgument('enable_can_fd', default_value='false'),
         DeclareLaunchArgument('timeout_sec', default_value='0.01'),
-        DeclareLaunchArgument('auto_configure', default_value='true'),
-        DeclareLaunchArgument('auto_activate', default_value='true'),
+        DeclareLaunchArgument('auto_configure', default_value='true'), # now using default
+        DeclareLaunchArgument('auto_activate', default_value='true'), # now using default
         DeclareLaunchArgument('to_can_bus_topic', default_value='to_can_bus'),
         socket_can_sender_node,
         socket_can_sender_configure_event_handler,
