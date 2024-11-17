@@ -10,7 +10,8 @@ colcon build --packages-select serial_imu
 colcon build --packages-select uart_slave
 colcon build --packages-select imu_process
 colcon build --packages-select nav_algo
-colcon build --packages-select ros2_socketcan
+colcon build --packages-select ros2_socketcan (no dependencies on previous package)
+colcon build --packages-select canbus_slave
 
 ## to launch:
 ## ros2 launch serial_imu imu_spec_msg.launch.py
@@ -19,6 +20,7 @@ colcon build --packages-select ros2_socketcan
 ## ros2 launch nav_algo nav_algo.launch.py
 ## ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
 ## ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
+## ros2 launch canbus_slave canbus_slave.launch.py
 
 chmod +x /ros2_ws/install/nav_algo/lib/nav_algo/nav_algo_node.py 
 

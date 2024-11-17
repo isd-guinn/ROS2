@@ -10,7 +10,7 @@
 #include "canbus_slave/MasterCanProtocol.hpp"
 #include "canbus_slave/CanDecode.hpp"
 
-static int can_decode_foc(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
+static int can_decode_foc(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_t *raw)
 {
     for (int i = 0; i < CAN_FRAME_DLC; i++)
     {
@@ -34,7 +34,7 @@ static int can_decode_foc(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
     return 1;
 }
 
-static int can_decode_imu(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
+static int can_decode_imu(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_t *raw)
 {
     for (int i = 0; i < CAN_FRAME_DLC; i++)
     {
@@ -51,39 +51,40 @@ static int can_decode_imu(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
     float temp2 = ByteUtil::reconFloat(raw->raw_data, IMU_DATA_Y_W);
 
     // check type
-    switch (msg->id % 100){
-        case 1:
-            raw->imu.acc_x = temp1;
-            raw->imu.acc_y = temp2;
-            break;
-        case 2:
-            raw->imu.acc_z = temp1;
-            break;
-        case 3:
-            raw->imu.angvel_x = temp1;
-            raw->imu.angvel_y = temp2;
-            break;
-        case 4:
-            raw->imu.angvel_z = temp1;
-            break;
-        case 5:
-            raw->imu.ang_x = temp1;
-            raw->imu.ang_y = temp2;
-            break;
-        case 6:
-            raw->imu.ang_z = temp1;
-            break;
-        case 7:
-            raw->imu.quat_x = temp1;
-            raw->imu.quat_y = temp2;
-            break;
-        case 8:
-            raw->imu.quat_z = temp1;
-            raw->imu.quat_w = temp2;
-            break;
-        default:
-            std::cout << "Unknown IMU data type: " << msg->id % 100 << std::endl;
-            return -1;
+    switch (msg->id % 100)
+    {
+    case 1:
+        raw->imu.acc_x = temp1;
+        raw->imu.acc_y = temp2;
+        break;
+    case 2:
+        raw->imu.acc_z = temp1;
+        break;
+    case 3:
+        raw->imu.angvel_x = temp1;
+        raw->imu.angvel_y = temp2;
+        break;
+    case 4:
+        raw->imu.angvel_z = temp1;
+        break;
+    case 5:
+        raw->imu.ang_x = temp1;
+        raw->imu.ang_y = temp2;
+        break;
+    case 6:
+        raw->imu.ang_z = temp1;
+        break;
+    case 7:
+        raw->imu.quat_x = temp1;
+        raw->imu.quat_y = temp2;
+        break;
+    case 8:
+        raw->imu.quat_z = temp1;
+        raw->imu.quat_w = temp2;
+        break;
+    default:
+        std::cout << "Unknown IMU data type: " << msg->id % 100 << std::endl;
+        return -1;
     }
 
     std::cout << "IMU data type: " << msg->id % 100 << std::endl;
@@ -93,16 +94,17 @@ static int can_decode_imu(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
     return 1;
 }
 
-int can_decode(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
+int can_decode(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_t *raw)
 {
     auto time = msg->header.stamp;
-    
+    std::cout << "Received CAN message at " << time.sec << "s " << time.nanosec << "ns" << std::endl;
+
     if (msg->dlc != CAN_FRAME_DLC)
     {
         std::cout << "Invalid frame length: " << msg->dlc << std::endl;
         return -1;
     }
-    
+
     switch (msg->id)
     {
         case ID_IMU_DATA_ACC_XY:
@@ -114,10 +116,12 @@ int can_decode(const can_msgs::msg::Frame::SharedPtr msg, raw_t *raw)
         case ID_IMU_DATA_QUAT_XY:
         case ID_IMU_DATA_QUAT_ZW:
             std::cout << "IMU data:" << msg->id << std::endl;
-            return can_decode_imu(msg, &raw);
+            return can_decode_imu(msg, raw);
+            break;
         case ID_FOC_ANGLE:
             std::cout << "FOC angle" << std::endl;
-            return can_decode_foc(msg, &raw);
+            return can_decode_foc(msg, raw);
+            break;
         default:
             std::cout << "Unknown message id: " << msg->id << std::endl;
             return -1;

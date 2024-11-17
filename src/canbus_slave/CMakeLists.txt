@@ -55,7 +55,7 @@ include_directories(
 
 # to be updated
 add_executable(s2m_receiver_can 
-               src/canbus_s2m.cpp)
+               src/canbus_s2m.cpp src/can_decode.cpp)
 ament_target_dependencies(s2m_receiver_can 
                           rclcpp can_msgs ros2_socketcan std_msgs sensor_msgs serial_imu uart_slave)
 target_link_libraries(s2m_receiver_can "${cpp_typesupport_target}")

@@ -1,3 +1,3 @@
-float64 pitch_x
-float64 roll_y
-float64 yaw_z
+float32 pitch_x
+float32 roll_y
+float32 yaw_z

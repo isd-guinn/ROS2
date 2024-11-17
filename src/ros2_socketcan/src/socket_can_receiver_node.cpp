@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include <stdio.h>
+
 namespace lc = rclcpp_lifecycle;
 using LNI = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface;
 using lifecycle_msgs::msg::State;
@@ -210,6 +212,8 @@ namespace drivers
           frame_msg.is_error = (receive_id.frame_type() == FrameType::ERROR);
           frame_msg.dlc = receive_id.length();
           frames_pub_->publish(std::move(frame_msg));
+
+          RCLCPP_INFO(get_logger(), "Received CAN message.");
         }
       }
       else

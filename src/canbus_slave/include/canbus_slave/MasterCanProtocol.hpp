@@ -13,16 +13,19 @@
 #define CAN_FRAME_DLC 8
 
 /* FRAME ID - S2M */
-#define ID_IMU_DATA_ACC_XY      101
-#define ID_IMU_DATA_ACC_Z       102
-#define ID_IMU_DATA_ANGVEL_XY   103
-#define ID_IMU_DATA_ANGVEL_Z    104
-#define ID_IMU_DATA_ANG_XY      105
-#define ID_IMU_DATA_ANG_Z       106
-#define ID_IMU_DATA_QUAT_XY     107
-#define ID_IMU_DATA_QUAT_ZW     108
+#define ID_IMU_DATA_ACC_XY      101 // 0x65
+#define ID_IMU_DATA_ACC_Z       102 // 0x66
 
-#define ID_FOC_ANGLE            200
+#define ID_IMU_DATA_ANGVEL_XY   103 // 0x67
+#define ID_IMU_DATA_ANGVEL_Z    104 // 0x68
+
+#define ID_IMU_DATA_ANG_XY      105 // 0x69
+#define ID_IMU_DATA_ANG_Z       106 // 0x6A
+
+#define ID_IMU_DATA_QUAT_XY     107 // 0x6B
+#define ID_IMU_DATA_QUAT_ZW     108 // 0x6C
+
+#define ID_FOC_ANGLE            200 // 0xC8
 
 /*  Byte Position Macros - IMU DATA
 
