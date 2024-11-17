@@ -53,15 +53,21 @@ include_directories(
 # rosidl_get_typesupport_target(cpp_typesupport_target
 #   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-# to be updated
 add_executable(s2m_receiver_can 
                src/canbus_s2m.cpp src/can_decode.cpp)
 ament_target_dependencies(s2m_receiver_can 
                           rclcpp can_msgs ros2_socketcan std_msgs sensor_msgs serial_imu uart_slave)
 target_link_libraries(s2m_receiver_can "${cpp_typesupport_target}")
 
+add_executable(m2s_sender_can 
+               src/canbus_m2s.cpp)
+ament_target_dependencies(m2s_sender_can 
+                          rclcpp can_msgs ros2_socketcan std_msgs uart_slave)
+target_link_libraries(m2s_sender_can "${cpp_typesupport_target}")
+
 install(TARGETS 
         s2m_receiver_can
+        m2s_sender_can
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 

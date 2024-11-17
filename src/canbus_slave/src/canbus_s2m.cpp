@@ -54,7 +54,7 @@ private:
         }
 
         // publish based on the message id
-        if (msg->id == ID_FOC_ANGLE){
+        if (msg->id == ID_FOC){
             // publish FOC angle
             uart_slave::msg::FocAngle foc_msg;
             foc_msg.left = raw.foc.foc_left;
@@ -64,7 +64,7 @@ private:
         }
         else{
             // publish IMU data
-            if (msg->id == ID_IMU_DATA_ANG_XY || msg->id == ID_IMU_DATA_ANG_Z){
+            if (msg->id == ID_IMU_ANG_XY || msg->id == ID_IMU_ANG_Z){
                 // publish IMU angle data - euler angles
                 serial_imu::msg::EulerAngle euler_msg;
                 // load the previous data
@@ -73,11 +73,11 @@ private:
                 euler_msg.yaw_z = history_imu.ang_z;
                 // update the data
                 switch (msg->id){
-                    case ID_IMU_DATA_ANG_XY:
+                    case ID_IMU_ANG_XY:
                         euler_msg.pitch_x = raw.imu.ang_x;
                         euler_msg.roll_y = raw.imu.ang_y;
                         break;
-                    case ID_IMU_DATA_ANG_Z:
+                    case ID_IMU_ANG_Z:
                         euler_msg.yaw_z = raw.imu.ang_z;
                         break;
                     default:
@@ -108,7 +108,7 @@ private:
                 imu_msg.orientation.z = history_imu.quat_z;
                 imu_msg.orientation.w = history_imu.quat_w;
                 switch (msg->id){
-                    case ID_IMU_DATA_ACC_XY:
+                    case ID_IMU_ACC_XY:
                         imu_msg.linear_acceleration.x = raw.imu.acc_x;
                         imu_msg.linear_acceleration.y = raw.imu.acc_y;
                         imu_pub_->publish(imu_msg);
@@ -117,14 +117,14 @@ private:
                         history_imu.acc_x = raw.imu.acc_x;
                         history_imu.acc_y = raw.imu.acc_y;
                         break;
-                    case ID_IMU_DATA_ACC_Z:
+                    case ID_IMU_ACC_Z:
                         imu_msg.linear_acceleration.z = raw.imu.acc_z;
                         imu_pub_->publish(imu_msg);
                         std::cout << "IMU data published" << std::endl;
                         // update the history data
                         history_imu.acc_z = raw.imu.acc_z;
                         break;
-                    case ID_IMU_DATA_ANGVEL_XY:
+                    case ID_IMU_ANGVEL_XY:
                         imu_msg.angular_velocity.x = raw.imu.angvel_x;
                         imu_msg.angular_velocity.y = raw.imu.angvel_y;
                         imu_pub_->publish(imu_msg);
@@ -133,14 +133,14 @@ private:
                         history_imu.angvel_x = raw.imu.angvel_x;
                         history_imu.angvel_y = raw.imu.angvel_y;
                         break;
-                    case ID_IMU_DATA_ANGVEL_Z:
+                    case ID_IMU_ANGVEL_Z:
                         imu_msg.angular_velocity.z = raw.imu.angvel_z;
                         imu_pub_->publish(imu_msg);
                         std::cout << "IMU data published" << std::endl;
                         // update the history data
                         history_imu.angvel_z = raw.imu.angvel_z;
                         break;
-                    case ID_IMU_DATA_QUAT_XY:
+                    case ID_IMU_QUAT_XY:
                         imu_msg.orientation.x = raw.imu.quat_x;
                         imu_msg.orientation.y = raw.imu.quat_y;
                         imu_pub_->publish(imu_msg);
@@ -149,7 +149,7 @@ private:
                         history_imu.quat_x = raw.imu.quat_x;
                         history_imu.quat_y = raw.imu.quat_y;
                         break;
-                    case ID_IMU_DATA_QUAT_ZW:
+                    case ID_IMU_QUAT_ZW:
                         imu_msg.orientation.z = raw.imu.quat_z;
                         imu_msg.orientation.w = raw.imu.quat_w;
                         imu_pub_->publish(imu_msg);

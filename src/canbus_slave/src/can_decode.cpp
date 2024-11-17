@@ -24,8 +24,8 @@ static int can_decode_foc(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_
     std::cout << std::endl;
 
     // decode & store the data
-    raw->foc.foc_left = ByteUtil::reconFloat(raw->raw_data, FOC_ANGLE_LEFT);
-    raw->foc.foc_right = ByteUtil::reconFloat(raw->raw_data, FOC_ANGLE_RIGHT);
+    raw->foc.foc_left = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_FOC_LEFT);
+    raw->foc.foc_right = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_FOC_RIGHT);
 
     std::cout << "FOC decoded data: " << std::endl;
     std::cout << "Left: " << raw->foc.foc_left << std::endl;
@@ -47,38 +47,38 @@ static int can_decode_imu(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_
     }
     std::cout << std::endl;
 
-    float temp1 = ByteUtil::reconFloat(raw->raw_data, IMU_DATA_X_Z);
-    float temp2 = ByteUtil::reconFloat(raw->raw_data, IMU_DATA_Y_W);
+    float temp1 = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_IMU_XZ);
+    float temp2 = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_IMU_YW);
 
     // check type
-    switch (msg->id % 100)
+    switch (msg->id)
     {
-    case 1:
+    case ID_IMU_ACC_XY:
         raw->imu.acc_x = temp1;
         raw->imu.acc_y = temp2;
         break;
-    case 2:
+    case ID_IMU_ACC_Z:
         raw->imu.acc_z = temp1;
         break;
-    case 3:
+    case ID_IMU_ANGVEL_XY:
         raw->imu.angvel_x = temp1;
         raw->imu.angvel_y = temp2;
         break;
-    case 4:
+    case ID_IMU_ANGVEL_Z:
         raw->imu.angvel_z = temp1;
         break;
-    case 5:
+    case ID_IMU_ANG_XY:
         raw->imu.ang_x = temp1;
         raw->imu.ang_y = temp2;
         break;
-    case 6:
+    case ID_IMU_ANG_Z:
         raw->imu.ang_z = temp1;
         break;
-    case 7:
+    case ID_IMU_QUAT_XY:
         raw->imu.quat_x = temp1;
         raw->imu.quat_y = temp2;
         break;
-    case 8:
+    case ID_IMU_QUAT_ZW:
         raw->imu.quat_z = temp1;
         raw->imu.quat_w = temp2;
         break;
@@ -107,18 +107,18 @@ int can_decode(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_t *raw)
 
     switch (msg->id)
     {
-        case ID_IMU_DATA_ACC_XY:
-        case ID_IMU_DATA_ACC_Z:
-        case ID_IMU_DATA_ANGVEL_XY:
-        case ID_IMU_DATA_ANGVEL_Z:
-        case ID_IMU_DATA_ANG_XY:
-        case ID_IMU_DATA_ANG_Z:
-        case ID_IMU_DATA_QUAT_XY:
-        case ID_IMU_DATA_QUAT_ZW:
+        case ID_IMU_ACC_XY:
+        case ID_IMU_ACC_Z:
+        case ID_IMU_ANGVEL_XY:
+        case ID_IMU_ANGVEL_Z:
+        case ID_IMU_ANG_XY:
+        case ID_IMU_ANG_Z:
+        case ID_IMU_QUAT_XY:
+        case ID_IMU_QUAT_ZW:
             std::cout << "IMU data:" << msg->id << std::endl;
             return can_decode_imu(msg, raw);
             break;
-        case ID_FOC_ANGLE:
+        case ID_FOC:
             std::cout << "FOC angle" << std::endl;
             return can_decode_foc(msg, raw);
             break;

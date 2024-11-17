@@ -1,8 +1,8 @@
 # for documenting the CLI commands for testing & debug
 FROM <BaseImage>
 
-docker cp ~/guinn-ROS2/src 7af6d4b88b32:/ros2_ws
-docker exec -it 7af6d4b88b32 bash
+docker cp ~/guinn-ROS2/src 15fc2321303d:/ros2_ws
+docker exec -it 15fc2321303d bash
 
 cd /ros2_ws
 source /ros2_ws/install/setup.bash
