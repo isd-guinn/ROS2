@@ -11,11 +11,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# # Default to C++14
-# if(NOT CMAKE_CXX_STANDARD)
-#   set(CMAKE_CXX_STANDARD 14)
-# endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -30,11 +25,7 @@ ament_auto_find_build_dependencies()
 # find_package(lifecycle_msgs REQUIRED)
 # find_package(can_msgs REQUIRED)
 find_package(ros2_socketcan_msgs REQUIRED)
-
 # find_package(ament_cmake REQUIRED)
-# find_package(std_msgs REQUIRED)
-# find_package(ament_cmake_auto REQUIRED)
-# ament_auto_find_build_dependencies()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -55,23 +46,23 @@ include_directories(
   include
 )
 
-# rosidl_get_typesupport_target(cpp_typesupport_target
-#   ${PROJECT_NAME} rosidl_typesupport_cpp)
-
+# create a shared library named after the PROJECT_NAME
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/socket_can_common.cpp
   src/socket_can_id.cpp
   src/socket_can_receiver.cpp
   src/socket_can_sender.cpp)
 
+# shared library named socket_can_receiver_node
 ament_auto_add_library(socket_can_receiver_node SHARED
   src/socket_can_receiver_node.cpp
 )
-
+# link so that the shared library "socket_can_receiver_node" can use the shared library "PROJECT_NAME"
 target_link_libraries(socket_can_receiver_node
   ${PROJECT_NAME}
 )
-
+# Register an rclcpp component with the ament resource index and create an executable. 
+# socket_can_receiver_node = the name of the shared library
 rclcpp_components_register_node(socket_can_receiver_node
   PLUGIN "drivers::socketcan::SocketCanReceiverNode"
   EXECUTABLE socket_can_receiver_node_exe
@@ -80,29 +71,14 @@ rclcpp_components_register_node(socket_can_receiver_node
 ament_auto_add_library(socket_can_sender_node SHARED
   src/socket_can_sender_node.cpp
 )
-
 target_link_libraries(socket_can_sender_node
   ${PROJECT_NAME}
 )
-
 rclcpp_components_register_node(socket_can_sender_node
   PLUGIN "drivers::socketcan::SocketCanSenderNode"
   EXECUTABLE socket_can_sender_node_exe
 )
 
-# add_executable( processor 
-#                 src/imu_process.cpp src/manipulate.cpp)
-# ament_target_dependencies(processor 
-#                           rclcpp std_msgs sensor_msgs serial_imu)
-# target_link_libraries(processor "${cpp_typesupport_target}")
-
-# install(TARGETS 
-#         processor  
-#         DESTINATION lib/${PROJECT_NAME})
-# install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-
 ament_auto_package(INSTALL_TO_SHARE
   launch
 )
-
-# ament_package()
