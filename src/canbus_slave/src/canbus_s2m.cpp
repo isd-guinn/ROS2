@@ -45,7 +45,9 @@ private:
 
     void canbus_callback(const can_msgs::msg::Frame::SharedPtr msg)
     {
+        if (msg->id == ID_MOTOR_VOLTAGE || msg->id == ID_ACTION) return;
         std::cout << "\nmessage id: " << msg->id << std::endl;
+
         // decode & store
         if (can_decode(msg, &raw) == -1)
         {

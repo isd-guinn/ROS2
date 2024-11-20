@@ -34,7 +34,7 @@ private:
     void action_callback(const std_msgs::msg::UInt8::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "Action received: '%d'", msg->data);
-        // std::cout << "Action received: " << msg->data << std::endl;
+        std::cout << "Action received: " << msg->data << std::endl;
 
         can_msgs::msg::Frame can_msg;
         can_msg.id = ID_ACTION;
@@ -49,19 +49,20 @@ private:
             can_msg.data[i] = 0;
         }
         
+        std::cout << "Action frame data: " << std::endl;
         for (int i = 0; i < CAN_FRAME_DLC; i++){
-            RCLCPP_INFO(this->get_logger(), "data[%d]: '%d'", i, can_msg.data[i]);
-            // std::cout << "data[" << i << "]: " << can_msg.data[i] << std::endl;
+            std::cout << std::hex << (int)can_msg.data[i] << " ";
         }
+        std::cout << std::endl;
 
         can_pub_->publish(can_msg);
-        std::cout << "Action published" << std::endl;
+        std::cout << "Action published\n" << std::endl;
     }
 
     void motorvolt_callback(const uart_slave::msg::FocAngle::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "Motor voltage received: '%f', '%f'", msg->left, msg->right);
-        // std::cout << "Motor voltage received: " << msg->left << ", " << msg->right << std::endl;
+        std::cout << "Motor voltage received: " << msg->left << ", " << msg->right << std::endl;
 
         can_msgs::msg::Frame can_msg;
         can_msg.id = ID_MOTOR_VOLTAGE;
@@ -78,13 +79,14 @@ private:
             can_msg.data[i] = EXTRACT_BYTE_FROM_4BYTE_VALUE(msg->right, i - BYTE_POS_MOTOR_VOLT_RIGHT);
         }
 
+        std::cout << "Motor voltage frame data: " << std::endl;
         for (int i = 0; i < CAN_FRAME_DLC; i++){
-            RCLCPP_INFO(this->get_logger(), "data[%d]: '%d'", i, can_msg.data[i]);
-            // std::cout << "data[" << i << "]: " << can_msg.data[i] << std::endl;
+            std::cout << std::hex << (int)can_msg.data[i] << " ";
         }
+        std::cout << std::endl;
         
         can_pub_->publish(can_msg);
-        std::cout << "Motor voltage published" << std::endl;
+        std::cout << "Motor voltage published\n" << std::endl;
     }
 };
 

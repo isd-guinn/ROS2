@@ -27,7 +27,6 @@ static int can_decode_foc(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_
     raw->foc.foc_left = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_FOC_LEFT);
     raw->foc.foc_right = ByteUtil::reconFloat(raw->raw_data, BYTE_POS_FOC_RIGHT);
 
-    std::cout << "FOC decoded data: " << std::endl;
     std::cout << "Left: " << raw->foc.foc_left << std::endl;
     std::cout << "Right: " << raw->foc.foc_right << std::endl;
 
@@ -88,7 +87,6 @@ static int can_decode_imu(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_
     }
 
     std::cout << "IMU data type: " << msg->id % 100 << std::endl;
-    std::cout << "IMU decoded data: " << std::endl;
     std::cout << "1st data: " << temp1 << " " << "2nd data: " << temp2 << std::endl;
 
     return 1;
@@ -119,7 +117,7 @@ int can_decode(const std::shared_ptr<can_msgs::msg::Frame> &msg, raw_t *raw)
             return can_decode_imu(msg, raw);
             break;
         case ID_FOC:
-            std::cout << "FOC angle" << std::endl;
+            std::cout << "FOC angle:" << std::endl;
             return can_decode_foc(msg, raw);
             break;
         default:
