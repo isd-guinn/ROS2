@@ -16,7 +16,7 @@ import time
 from nav_algo import *
 import multiprocessing
 from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 
 # global constants
 STOP = 0
@@ -51,7 +51,9 @@ class NavAlgo(Node):
         super().__init__('nav_algo') # initialize the node
         self.get_logger().info("Initializing the navigation node.....")
 
-        self.reentrant_callback_group = ReentrantCallbackGroup()
+        # self.reentrant_callback_group = ReentrantCallbackGroup() 
+        self.timer_cb_group = MutuallyExclusiveCallbackGroup()
+        self.action_cb_group = MutuallyExclusiveCallbackGroup()
         
         # self.timer_ = self.create_timer(TIMER_PERIOD_IN_SECOND, self.timer_callback)
         # self.nav_sub_pos_local_ = self.create_subscription(imu_process.msg.Position, 'Imu_local', self.position_callback, 50)
@@ -59,15 +61,15 @@ class NavAlgo(Node):
         # self.nav_pub_action_ = self.create_publisher(std_msgs.msg.UInt8, '/Robot_action', 10)
 
         self.timer_ = self.create_timer(
-            TIMER_PERIOD_IN_SECOND, self.timer_callback, callback_group=self.reentrant_callback_group)
+            TIMER_PERIOD_IN_SECOND, self.timer_callback, callback_group=self.timer_cb_group)
         self.nav_sub_pos_local_ = self.create_subscription(
             imu_process.msg.Position, 'Imu_local', 
-            self.position_callback, 50, callback_group=self.reentrant_callback_group)
+            self.position_callback, 50, callback_group=self.action_cb_group)
         # self.nav_sub_focangle_ = self.create_subscription(
         #     uart_slave.msg.FocAngle, 'FOC_angle', 
-        #     self.focangle_callback, 10, callback_group=self.reentrant_callback_group)
+        #     self.focangle_callback, 10, callback_group=self.action_cb_group)
         self.nav_pub_action_ = self.create_publisher(
-            std_msgs.msg.UInt8, '/Robot_action', 10, callback_group=self.reentrant_callback_group)
+            std_msgs.msg.UInt8, '/Robot_action', 10, callback_group=self.action_cb_group)
         
         # initialize the instance variables
         self.vel_x = 0.0
@@ -79,6 +81,14 @@ class NavAlgo(Node):
         self.foc_right = 45.0 # dummy values
         self.dt = 0.0 # for keeping time for integration
         
+    def get_user_input(self):
+        self.get_logger().info("Getting user input.....")
+        self.foc_left = int(input("Enter left angle: "))
+        self.foc_right = int(input("Enter right angle: "))
+        self.is_moving = int(input("Enter is_moving: "))
+        self.get_logger().info("FOC left: %f, FOC right: %f" % (self.foc_left, self.foc_right))
+        self.get_logger().info("is_moving: %s" % self.is_moving)
+
     def position_callback(self, msg):
         self.get_logger().info("current time: %d" % rclpy.clock.Clock().now().nanoseconds)
         self.get_logger().info("position msg time: %d" % msg.header.stamp.sec)
@@ -100,19 +110,26 @@ class NavAlgo(Node):
         if self.vel_x > THRESHOLD:
             self.is_moving = True
         self.get_logger().info("self.is_moving: %s" % self.is_moving)
+
+        # debug only: publish the action
+        # action_msg = std_msgs.msg.UInt8()
+        # action_msg.data = 1 # dummy value
+        # self.get_logger().info("action_msg.data: %d" % action_msg.data)
+        # self.nav_pub_action_.publish(action_msg)
         
+        self.reach_distance = input("Reached Distance? (t/f): ").lower() == 't' # for testing purposes only
         if self.reach_distance == True:
             # run the navigation algorithm
             self.get_logger().info("Running the navigation algorithm.....")
             self.get_logger().info("current time: %d" % rclpy.clock.Clock().now().nanoseconds)
             action = 10 # dummy value
 
-            # Debug Use Only!!!
-            # self.foc_right = int(input("Enter right angle: "))
-            # self.foc_left = int(input("Enter left angle: "))
-            # self.is_moving = int(input("Enter is_moving: "))
+            # # Debug Use Only!!!
+            self.foc_right = int(input("Enter right angle: "))
+            self.foc_left = int(input("Enter left angle: "))
+            self.is_moving = int(input("Enter is_moving (t/f): ").lower() == 't')
         
-        
+            action = 10
             action = run_nav_algo(self.foc_left, self.foc_right, self.is_moving)
             self.get_logger().info("current time: %d" % rclpy.clock.Clock().now().nanoseconds)
             self.get_logger().info("action: %d" % action)
@@ -142,12 +159,11 @@ class NavAlgo(Node):
         while (self.angle_z < new_ang - ANG_THRESHOLD) or (self.angle_z > new_ang + ANG_THRESHOLD):
 
             # Turn back to shorter time later
-            if time.time() - start_time > 5:  # Check if more than 5 seconds have passed 
+            if time.time() - start_time > 30:  # Check if more than 5 seconds have passed 
 
-                print("Error: Stuck in angle check loop for more than 5 seconds.")
+                print("Error: Stuck in angle check loop for more than 30 seconds.")
                 break
             time.sleep(0.01)
-
         
         # reset the boolean
         self.get_logger().info("Resetting the boolean variables.....")

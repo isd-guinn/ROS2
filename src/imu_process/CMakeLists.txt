@@ -20,8 +20,8 @@ find_package(rclcpp REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(canbus_slave REQUIRED)
 
-find_package(serial_imu REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
@@ -61,7 +61,7 @@ rosidl_get_typesupport_target(cpp_typesupport_target
 add_executable( processor 
                 src/imu_process.cpp src/manipulate.cpp)
 ament_target_dependencies(processor 
-                          rclcpp std_msgs sensor_msgs serial_imu)
+                          rclcpp std_msgs sensor_msgs canbus_slave)
 target_link_libraries(processor "${cpp_typesupport_target}")
 
 install(TARGETS 

@@ -11,7 +11,7 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
 
-  <depend>serial_imu</depend>
+  <depend>canbus_slave</depend>
   <depend>builtin_interfaces</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

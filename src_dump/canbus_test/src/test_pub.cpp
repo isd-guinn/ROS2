@@ -27,7 +27,7 @@ private:
         std::cout << "Publishing Motor Voltage" << std::endl;
         auto motorvolt = uart_slave::msg::FocAngle();
         // ask for keyboard input to be the left and the right data
-        bool manual_input = false;
+        bool manual_input = true;
         if (manual_input)
         {
             std::cout << "Enter left and right motor voltage (float): ";
@@ -35,8 +35,8 @@ private:
             std::cin >> motorvolt.right;
         }
         else {
-            motorvolt.left = 12.0;
-            motorvolt.right = 1.0;
+            motorvolt.left = 8.0;
+            motorvolt.right = 8.0;
         }
         motorvolt_pub_->publish(motorvolt);
         std::cout << "Published Motor Voltage" << std::endl;

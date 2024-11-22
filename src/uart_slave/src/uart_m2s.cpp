@@ -19,7 +19,7 @@
 // #define BIG_ENDIAN
 
 #include "uart_slave/MasterSerialProtocol.hpp"
-#include "serial_imu/msg/euler_angle.hpp"
+#include "canbus_slave/msg/euler_angle.hpp"
 #include "uart_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
@@ -70,7 +70,7 @@ public:
         // uart_fd_ = open_serial();
         uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
-        uart_sub_euler_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
+        uart_sub_euler_ = this->create_subscription<canbus_slave::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
         uart_sub_motorvolt_ = this->create_subscription<uart_slave::msg::FocAngle>("Motor_voltage", 10, std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
         uart_sub_action_ = this->create_subscription<std_msgs::msg::UInt8>("Robot_action", 10, std::bind(&UartPublisher::algo_callback, this, std::placeholders::_1));
         
@@ -112,7 +112,7 @@ private:
     temp_angular_speed_current = msg->angular_velocity.x; // in radian
   }
 
-  void euler_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
+  void euler_callback(const canbus_slave::msg::EulerAngle::SharedPtr msg){
     temp_angle_current = msg->yaw_z; // in radian
   }
 
@@ -241,7 +241,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
-  rclcpp::Subscription<serial_imu::msg::EulerAngle>::SharedPtr uart_sub_euler_;
+  rclcpp::Subscription<canbus_slave::msg::EulerAngle>::SharedPtr uart_sub_euler_;
   rclcpp::Subscription<uart_slave::msg::FocAngle>::SharedPtr uart_sub_motorvolt_;
   rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr uart_sub_action_;
   // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;

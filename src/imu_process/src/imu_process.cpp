@@ -1,7 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <sensor_msgs/msg/imu.hpp>
-#include "serial_imu/msg/euler_angle.hpp"
+#include "canbus_slave/msg/euler_angle.hpp"
 
 #include "builtin_interfaces/msg/time.hpp"
 #include "std_msgs/msg/header.hpp"
@@ -32,7 +32,7 @@ class IMUProcessor : public rclcpp::Node
 		IMUProcessor() : Node("IMU_processor")	
 		{	
 			rawimu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&IMUProcessor::rawimu_callback, this, std::placeholders::_1));
-			euler_sub_ = this->create_subscription<serial_imu::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&IMUProcessor::euler_callback, this, std::placeholders::_1));
+			euler_sub_ = this->create_subscription<canbus_slave::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&IMUProcessor::euler_callback, this, std::placeholders::_1));
 			local_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_local", 20);
 			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_global", 20);
 			
@@ -44,12 +44,12 @@ class IMUProcessor : public rclcpp::Node
 
     private:
 		rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr rawimu_sub_;
-		rclcpp::Subscription<serial_imu::msg::EulerAngle>::SharedPtr euler_sub_;
+		rclcpp::Subscription<canbus_slave::msg::EulerAngle>::SharedPtr euler_sub_;
 		rclcpp::Publisher<imu_process::msg::Position>::SharedPtr local_pos_pub_;
 		rclcpp::Publisher<imu_process::msg::Position>::SharedPtr global_pos_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
 
-		void euler_callback(const serial_imu::msg::EulerAngle::SharedPtr msg){
+		void euler_callback(const canbus_slave::msg::EulerAngle::SharedPtr msg){
 			local_data.yaw_z = msg->yaw_z / DEG_TO_RAD;
 			std::cout << "Absolute Angle (z): " << local_data.yaw_z << " || Init angle (z): " << init_yaw << std::endl;
 			if (init_count == 0) {
@@ -98,31 +98,6 @@ class IMUProcessor : public rclcpp::Node
 			// Eigen::Array3f gravity_local = distributeGravity(RotationalMatrix);
 			// std::cout << "Gravity in local frame: " << gravity_local << std::endl;
 
-		/* TESTING THE IEKF */
-		/*
-			iekf.predict();
-        	iekf.update(local_data.acc, local_data.quaternion);
-
-			if (iekf.isStatic()) {
-				std::cout << "Robot is static" << std::endl;
-			} else if (iekf.isConstantVelocity()) {
-				std::cout << "Robot is moving with constant velocity" << std::endl;
-			} else {
-				std::cout << "Robot is accelerating" << std::endl;
-			}
-
-			// Get estimated state
-			auto position = iekf.getPosition();
-			auto velocity = iekf.getVelocity();
-			auto orientation = iekf.getOrientation();
-
-			std::cout << "IEKF Position: " << position.transpose() << std::endl;
-			std::cout << "IEKF Velocity: " << velocity.transpose() << std::endl;
-			std::cout << "IEKF Orientation: " << orientation.transpose() << std::endl;
-			std::cout << "----------" << std::endl;
-		*/
-		/* END OF TESTING THE IEKF */
-
 			// process the receive message
 			double elapse_time = dead_reckon(&local_data, last_update_time);
 			std::cout << "Elapsed Time: " << elapse_time << std::endl;
@@ -164,7 +139,11 @@ class IMUProcessor : public rclcpp::Node
 int main(int argc,const char* argv[])
 {
 	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<IMUProcessor>());
+	auto node = std::make_shared<IMUProcessor>();
+	// rclcpp::executors::MultiThreadedExecutor executor;
+	// executor.add_node(node);
+	// executor.spin();
+	rclcpp::spin(node);
 	rclcpp::shutdown();
 	return 0;
 }

@@ -3,7 +3,7 @@
 #include "can_msgs/msg/frame.hpp"
 // #include "ros2_socketcan_msgs/msg/fd_frame.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-#include "serial_imu/msg/euler_angle.hpp"
+#include "canbus_slave/msg/euler_angle.hpp"
 #include "uart_slave/msg/foc_angle.hpp"
 
 #define SMALL_ENDIAN
@@ -29,7 +29,7 @@ public:
         
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(
             "/Imu_data_can", 10);
-        euler_pub_ = this->create_publisher<serial_imu::msg::EulerAngle>(
+        euler_pub_ = this->create_publisher<canbus_slave::msg::EulerAngle>(
             "/Imu_euler_angle", 10);
         foc_pub_ = this->create_publisher<uart_slave::msg::FocAngle>(
             "/FOC_angle", 10);
@@ -40,7 +40,7 @@ private:
     // rclcpp::Subscription<ros2_socketcan_msgs::msg::FdFrame>::SharedPtr can_fd_sub_;
 
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-    rclcpp::Publisher<serial_imu::msg::EulerAngle>::SharedPtr euler_pub_;
+    rclcpp::Publisher<canbus_slave::msg::EulerAngle>::SharedPtr euler_pub_;
     rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr foc_pub_;
 
     void canbus_callback(const can_msgs::msg::Frame::SharedPtr msg)
@@ -68,7 +68,7 @@ private:
             // publish IMU data
             if (msg->id == ID_IMU_ANG_XY || msg->id == ID_IMU_ANG_Z){
                 // publish IMU angle data - euler angles
-                serial_imu::msg::EulerAngle euler_msg;
+                canbus_slave::msg::EulerAngle euler_msg;
                 // load the previous data
                 euler_msg.pitch_x = history_imu.ang_x;
                 euler_msg.roll_y = history_imu.ang_y;

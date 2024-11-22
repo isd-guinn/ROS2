@@ -17,7 +17,6 @@
   <depend>std_msgs</depend>
   <!-- <depend>sensor_msgs</depend> -->
   <depend>builtin_interfaces</depend>
-  <!-- <depend>serial_imu</depend>  -->
   <depend>uart_slave</depend>
   <depend>imu_process</depend>
   

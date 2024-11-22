@@ -23,7 +23,7 @@ find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-find_package(serial_imu REQUIRED)
+find_package(canbus_slave REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 ament_export_dependencies(rosidl_default_runtime)
@@ -61,7 +61,7 @@ rosidl_get_typesupport_target(cpp_typesupport_target
 add_executable(m2s_sender 
                src/uart_m2s.cpp)
 ament_target_dependencies(m2s_sender 
-                          rclcpp std_msgs serial_imu sensor_msgs)
+                          rclcpp std_msgs canbus_slave sensor_msgs)
 target_link_libraries(m2s_sender "${cpp_typesupport_target}")
 
 add_executable(s2m_receiver 
