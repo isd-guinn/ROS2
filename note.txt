@@ -6,31 +6,29 @@ docker exec -it 9c0442b355c8 bash
 
 cd /ros2_ws
 source /ros2_ws/install/setup.bash
-colcon build --packages-select serial_imu
+colcon build --packages-select ros2_socketcan
+colcon build --packages-select canbus_slave
 colcon build --packages-select uart_slave
 colcon build --packages-select imu_process
 colcon build --packages-select nav_algo
-colcon build --packages-select ros2_socketcan (no dependencies on previous package)
-colcon build --packages-select canbus_slave
-colcon build --packages-select canbus_test (publishing dummy value)
 colcon build --packages-select joystick
+colcon build --packages-select serial_imu
+colcon build --packages-select canbus_test (publishing dummy value)
 
 ## to launch:
-## ros2 launch serial_imu imu_spec_msg.launch.py
-## ros2 launch uart_slave uart_slave.launch.py
-## ros2 launch imu_process imu_processor.launch.py
-## ros2 launch nav_algo nav_algo.launch.py
-## ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
-## ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
-## ros2 launch canbus_slave canbus_slave.launch.py
-## ros2 run canbus_test publisher (requires manual input, so use ros2 run instead)
-## ros2 launch joystick joystick.launch.py
+ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
+ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
+ros2 launch canbus_slave canbus_slave.launch.py
+ros2 launch uart_slave uart_slave.launch.py
+ros2 launch imu_process imu_processor.launch.py
+ros2 launch nav_algo nav_algo.launch.py
+ros2 launch joystick joystick.launch.py
+ros2 launch serial_imu imu_spec_msg.launch.py
+ros2 run canbus_test publisher (requires manual input, so use ros2 run instead)
 
-chmod +x /ros2_ws/install/nav_algo/lib/nav_algo/nav_algo_node.py 
-
-# to update the start-up code
-- upload the latest code to docker image & update the docker image
-- update docker-compose.yml
+ros2 topic echo /Imu_data_can --field angular_velocity
+ros2 topic echo /Imu_data_can --field linear_acceleration
+ros2 topic echo /Imu_euler_angle
 
 imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
 when at rest, 
@@ -68,8 +66,14 @@ cansend can0 000#00.00 (or use PCAN and USB-to-CAN)
 To show upcoming received message:
 candump can0
 -----------------------------------
+sudo systemctl enable/disable ros2_docker.service
 sudo systemctl start(or stop/restart) ros2_docker.service
 sudo systemctl status ros2_docker.service
+
+# to update the start-up code
+- upload the latest code to docker image & update the docker image
+- update docker-compose.yml
+- (if needed) update /etc/systemd/system/ros2_docker.service in raspi5
 -----------------------------------
 current:
 [] kalman filters?? (ros2) robot_localization

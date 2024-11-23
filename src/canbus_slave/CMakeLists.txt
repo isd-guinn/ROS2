@@ -26,6 +26,7 @@ find_package(rosidl_default_generators REQUIRED)
 ament_export_dependencies(rosidl_default_runtime)
 set(msg_files
 "msg/EulerAngle.msg"
+"msg/FocAngle.msg"
 )
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
@@ -56,13 +57,13 @@ rosidl_get_typesupport_target(cpp_typesupport_target
 add_executable(s2m_receiver_can 
                src/canbus_s2m.cpp src/can_decode.cpp)
 ament_target_dependencies(s2m_receiver_can 
-                          rclcpp can_msgs ros2_socketcan std_msgs sensor_msgs serial_imu)
+                          rclcpp can_msgs ros2_socketcan std_msgs sensor_msgs)
 target_link_libraries(s2m_receiver_can "${cpp_typesupport_target}")
 
 add_executable(m2s_sender_can 
                src/canbus_m2s.cpp)
 ament_target_dependencies(m2s_sender_can 
-                          rclcpp can_msgs ros2_socketcan std_msgs uart_slave)
+                          rclcpp can_msgs ros2_socketcan std_msgs)
 target_link_libraries(m2s_sender_can "${cpp_typesupport_target}")
 
 install(TARGETS 

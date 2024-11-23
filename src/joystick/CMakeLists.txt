@@ -42,7 +42,7 @@ include_directories(
 add_executable(joystick 
                src/main.cpp src/joystick.cpp) 
 ament_target_dependencies(joystick 
-                          rclcpp uart_slave)
+                          rclcpp canbus_slave)
 target_link_libraries(joystick "${cpp_typesupport_target}")
 
 install(TARGETS 

@@ -20,7 +20,7 @@
 
 #include "uart_slave/MasterSerialProtocol.hpp"
 #include "uart_slave/serial_receive.hpp"
-#include "uart_slave/msg/foc_angle.hpp"
+#include "canbus_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -46,7 +46,7 @@ public:
         : Node("Uart_receiver")
     {
         uart_fd_ = open_serial();
-        uart_pub_focangle_ = this->create_publisher<uart_slave::msg::FocAngle>("/FOC_angle", 10);
+        uart_pub_focangle_ = this->create_publisher<canbus_slave::msg::FocAngle>("/FOC_angle", 10);
         timer_ = this->create_wall_timer(18ms, std::bind(&UartReceiver::timer_callback, this));
     }
     ~UartReceiver()
@@ -58,13 +58,13 @@ public:
     }
 
 private:
-    rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr uart_pub_focangle_;
+    rclcpp::Publisher<canbus_slave::msg::FocAngle>::SharedPtr uart_pub_focangle_;
     rclcpp::TimerBase::SharedPtr timer_;
     
     int num_bytes;
 
     void timer_callback(){
-        auto foc_angle = uart_slave::msg::FocAngle();
+        auto foc_angle = canbus_slave::msg::FocAngle();
         raw.nbyte = 0;
         num_bytes = 0;
         

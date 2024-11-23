@@ -31,7 +31,7 @@ class IMUProcessor : public rclcpp::Node
     public:
 		IMUProcessor() : Node("IMU_processor")	
 		{	
-			rawimu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&IMUProcessor::rawimu_callback, this, std::placeholders::_1));
+			rawimu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data_can", 10, std::bind(&IMUProcessor::rawimu_callback, this, std::placeholders::_1));
 			euler_sub_ = this->create_subscription<canbus_slave::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&IMUProcessor::euler_callback, this, std::placeholders::_1));
 			local_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_local", 20);
 			global_pos_pub_ = this->create_publisher<imu_process::msg::Position>("/Imu_global", 20);

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #define JOY_MAX 32767
-#define V_MAX 12.0f
+#define V_MAX 18.0f
 
 void joy2theworld(float x, float y, float& left_v, float& right_v, const int x_o = 0, const int y_o = 0)
 {

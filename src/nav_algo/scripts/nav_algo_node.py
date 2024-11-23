@@ -8,8 +8,8 @@ import builtin_interfaces.msg
 from builtin_interfaces.msg import Time
 import imu_process.msg
 from imu_process.msg import Position
-import uart_slave.msg
-from uart_slave.msg import FocAngle
+import canbus_slave.msg
+from canbus_slave.msg import FocAngle
 
 import time
 
@@ -57,7 +57,7 @@ class NavAlgo(Node):
         
         # self.timer_ = self.create_timer(TIMER_PERIOD_IN_SECOND, self.timer_callback)
         # self.nav_sub_pos_local_ = self.create_subscription(imu_process.msg.Position, 'Imu_local', self.position_callback, 50)
-        # self.nav_sub_focangle_ = self.create_subscription(uart_slave.msg.FocAngle, 'FOC_angle', self.focangle_callback, 10)
+        # self.nav_sub_focangle_ = self.create_subscription(canbus_slave.msg.FocAngle, 'FOC_angle', self.focangle_callback, 10)
         # self.nav_pub_action_ = self.create_publisher(std_msgs.msg.UInt8, '/Robot_action', 10)
 
         self.timer_ = self.create_timer(
@@ -66,7 +66,7 @@ class NavAlgo(Node):
             imu_process.msg.Position, 'Imu_local', 
             self.position_callback, 50, callback_group=self.action_cb_group)
         # self.nav_sub_focangle_ = self.create_subscription(
-        #     uart_slave.msg.FocAngle, 'FOC_angle', 
+        #     canbus_slave.msg.FocAngle, 'FOC_angle', 
         #     self.focangle_callback, 10, callback_group=self.action_cb_group)
         self.nav_pub_action_ = self.create_publisher(
             std_msgs.msg.UInt8, '/Robot_action', 10, callback_group=self.action_cb_group)

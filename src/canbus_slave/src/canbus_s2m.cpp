@@ -4,7 +4,7 @@
 // #include "ros2_socketcan_msgs/msg/fd_frame.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "canbus_slave/msg/euler_angle.hpp"
-#include "uart_slave/msg/foc_angle.hpp"
+#include "canbus_slave/msg/foc_angle.hpp"
 
 #define SMALL_ENDIAN
 // #define BIG_ENDIAN
@@ -31,7 +31,7 @@ public:
             "/Imu_data_can", 10);
         euler_pub_ = this->create_publisher<canbus_slave::msg::EulerAngle>(
             "/Imu_euler_angle", 10);
-        foc_pub_ = this->create_publisher<uart_slave::msg::FocAngle>(
+        foc_pub_ = this->create_publisher<canbus_slave::msg::FocAngle>(
             "/FOC_angle", 10);
     }
 
@@ -41,7 +41,7 @@ private:
 
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
     rclcpp::Publisher<canbus_slave::msg::EulerAngle>::SharedPtr euler_pub_;
-    rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr foc_pub_;
+    rclcpp::Publisher<canbus_slave::msg::FocAngle>::SharedPtr foc_pub_;
 
     void canbus_callback(const can_msgs::msg::Frame::SharedPtr msg)
     {
@@ -58,7 +58,7 @@ private:
         // publish based on the message id
         if (msg->id == ID_FOC){
             // publish FOC angle
-            uart_slave::msg::FocAngle foc_msg;
+            canbus_slave::msg::FocAngle foc_msg;
             foc_msg.left = raw.foc.foc_left;
             foc_msg.right = raw.foc.foc_right;
             foc_pub_->publish(foc_msg);

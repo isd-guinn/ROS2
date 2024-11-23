@@ -20,7 +20,7 @@
 
 #include "uart_slave/MasterSerialProtocol.hpp"
 #include "canbus_slave/msg/euler_angle.hpp"
-#include "uart_slave/msg/foc_angle.hpp"
+#include "canbus_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -68,10 +68,10 @@ public:
         : Node("Uart_sender")
     {
         // uart_fd_ = open_serial();
-        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data", 10, std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
+        uart_sub_imuraw_ = this->create_subscription<sensor_msgs::msg::Imu>("Imu_data_can", 10, std::bind(&UartPublisher::imuraw_callback, this, std::placeholders::_1));
         // uart_sub_imuprocessed_ = this->create_subscription<???>("Imu_processed", 10, imuprocessed_callback);
         uart_sub_euler_ = this->create_subscription<canbus_slave::msg::EulerAngle>("Imu_euler_angle", 10, std::bind(&UartPublisher::euler_callback, this, std::placeholders::_1));
-        uart_sub_motorvolt_ = this->create_subscription<uart_slave::msg::FocAngle>("Motor_voltage", 10, std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
+        uart_sub_motorvolt_ = this->create_subscription<canbus_slave::msg::FocAngle>("Motor_volt", 10, std::bind(&UartPublisher::motorvolt_callback, this, std::placeholders::_1));
         uart_sub_action_ = this->create_subscription<std_msgs::msg::UInt8>("Robot_action", 10, std::bind(&UartPublisher::algo_callback, this, std::placeholders::_1));
         
         // send data to slave every 1s
@@ -116,7 +116,7 @@ private:
     temp_angle_current = msg->yaw_z; // in radian
   }
 
-  void motorvolt_callback(const uart_slave::msg::FocAngle::SharedPtr msg){
+  void motorvolt_callback(const canbus_slave::msg::FocAngle::SharedPtr msg){
     temp_motorvolt_left = msg->left; 
     temp_motorvolt_right = msg->right; 
   }
@@ -242,7 +242,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr uart_sub_imuraw_;
   rclcpp::Subscription<canbus_slave::msg::EulerAngle>::SharedPtr uart_sub_euler_;
-  rclcpp::Subscription<uart_slave::msg::FocAngle>::SharedPtr uart_sub_motorvolt_;
+  rclcpp::Subscription<canbus_slave::msg::FocAngle>::SharedPtr uart_sub_motorvolt_;
   rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr uart_sub_action_;
   // rclcpp::Subscription<???>::SharedPtr uart_sub_imuprocessed_;
 };

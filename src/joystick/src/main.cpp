@@ -1,5 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
-#include "uart_slave/msg/foc_angle.hpp"
+#include "canbus_slave/msg/foc_angle.hpp"
 
 #include "joystick.h"
 #include "joy2volt.h"
@@ -20,13 +20,13 @@ public:
   JoystickNode()
       : Node("Joystick_node")
   {
-    volt_pub_ = this->create_publisher<uart_slave::msg::FocAngle>("/Motor_voltage", 10);
+    volt_pub_ = this->create_publisher<canbus_slave::msg::FocAngle>("/Motor_volt", 10);
     timer_ = this->create_wall_timer(10ms, std::bind(&JoystickNode::timer_callback, this));
   }
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr volt_pub_;
+  rclcpp::Publisher<canbus_slave::msg::FocAngle>::SharedPtr volt_pub_;
 
   void timer_callback()
   {
@@ -70,7 +70,7 @@ private:
           joy2theworld(joy[0], joy[1], volt[0], volt[1]);
 
           // publish the reading as voltage
-          uart_slave::msg::FocAngle volt_msg;
+          canbus_slave::msg::FocAngle volt_msg;
           volt_msg.left = volt[0];
           volt_msg.right = volt[1];
           std::cout << "Pub Voltage Left: " << volt[0] << " Right: " << volt[1] << std::endl;
@@ -97,7 +97,7 @@ private:
       joy2theworld(joy[0], joy[1], volt[0], volt[1]);
 
       // publish the message
-      uart_slave::msg::FocAngle volt_msg;
+      canbus_slave::msg::FocAngle volt_msg;
       volt_msg.left = volt[0];
       volt_msg.right = volt[1];
       volt_pub_->publish(volt_msg);

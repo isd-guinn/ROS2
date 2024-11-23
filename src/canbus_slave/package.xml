@@ -15,8 +15,8 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
 
-  <depend>serial_imu</depend>
-  <depend>uart_slave</depend>
+  <!-- <depend>serial_imu</depend> -->
+  <!-- <depend>uart_slave</depend> -->
   
   <!-- UNCOMMENT BELOW IF ADDED CUSTOM MESSAGE IN CANBUS_SLAVE PACKAGE -->
   <buildtool_depend>rosidl_default_generators</buildtool_depend>

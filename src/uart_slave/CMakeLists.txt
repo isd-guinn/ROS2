@@ -67,13 +67,13 @@ target_link_libraries(m2s_sender "${cpp_typesupport_target}")
 add_executable(s2m_receiver 
                src/uart_s2m.cpp src/decode_serial.cpp)
 ament_target_dependencies(s2m_receiver 
-                          rclcpp std_msgs)
+                          rclcpp std_msgs canbus_slave)
 target_link_libraries(s2m_receiver "${cpp_typesupport_target}")
 
 add_executable(c2m_receiver
                src/uart_c2m.cpp src/decode_serial.cpp)
 ament_target_dependencies(c2m_receiver 
-                          rclcpp std_msgs)
+                          rclcpp std_msgs canbus_slave)
 target_link_libraries(c2m_receiver "${cpp_typesupport_target}")
 
 install(TARGETS 

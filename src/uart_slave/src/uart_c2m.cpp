@@ -18,7 +18,7 @@
 
 #include "uart_slave/ControllerSerialProtocol.hpp"
 #include "uart_slave/serial_receive.hpp"
-#include "uart_slave/msg/foc_angle.hpp"
+#include "canbus_slave/msg/foc_angle.hpp"
 
 #ifdef __cplusplus
 extern "C"{
@@ -46,7 +46,7 @@ public:
         : Node("Uart_receiver_controller")
     {
         uart_fd_ = open_serial();
-        uart_pub_motorvoltage_ = this->create_publisher<uart_slave::msg::FocAngle>("/Motor_voltage", 10);
+        uart_pub_motorvoltage_ = this->create_publisher<canbus_slave::msg::FocAngle>("/Motor_voltage", 10);
         // same frequency required?
         timer_ = this->create_wall_timer(100ms, std::bind(&UartControllerReceiver::timer_callback, this));
     }
@@ -59,13 +59,13 @@ public:
     }
 
 private:
-    rclcpp::Publisher<uart_slave::msg::FocAngle>::SharedPtr uart_pub_motorvoltage_;
+    rclcpp::Publisher<canbus_slave::msg::FocAngle>::SharedPtr uart_pub_motorvoltage_;
     rclcpp::TimerBase::SharedPtr timer_;
     
     int num_bytes;
 
     void timer_callback(){
-        auto motor_voltage = uart_slave::msg::FocAngle();
+        auto motor_voltage = canbus_slave::msg::FocAngle();
         raw.nbyte = 0;
         num_bytes = 0;
 
