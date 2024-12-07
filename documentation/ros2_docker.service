@@ -1,3 +1,5 @@
+// path: etc/systemd/system/.
+
 [Unit]
 Description=Start ROS 2 Docker Compose for all the nodes
 After=network-online.target
@@ -6,7 +8,7 @@ After=network-online.target
 Type=simple
 User=guinn
 WorkingDirectory=/home/guinn/guinn-ROS2
-ExecStart=/bin/bash -c 'docker compose up'
+ExecStart=/bin/bash -c 'docker compose -f ./docker-compose.yml up'
 Restart=on-failure
 RestartSec=10s
 TimeoutStartSec=0

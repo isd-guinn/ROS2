@@ -1,0 +1,11 @@
+// path: /etc/systemd/system/.
+// sudo systemctl restart systemd-networkd
+// sudo systemctl enable systemd-networkd
+
+[Match]
+Name=can0
+
+[CAN]
+BitRate=100000
+Loopback=no
+RestartSec=100ms

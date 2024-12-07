@@ -1,7 +1,153 @@
 # A ROS2 network with multiple nodes
 services:
+  ros2_socketcan_receiver:
+    image: hinpak/ros2:built-1207-maintain
+    container_name: socketcan_receiver
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev:rw
+      - /sys:/sys:rw
+    environment:
+      - DISPLAY=unix:1
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DOMAIN_ID=42
+    network_mode: "host"
+    # networks:
+    #   - ros2_network
+    command: > 
+      bash -c "
+      source /ros2_ws/install/setup.bash &&
+      ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
+      "
+    # colcon build --packages-select ros2_socketcan &&
+
+  ros2_socketcan_sender:
+    image: hinpak/ros2:built-1207-maintain
+    container_name: socketcan_sender
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev:rw
+      - /sys:/sys:rw
+    environment:
+      - DISPLAY=unix:1
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DOMAIN_ID=42
+    network_mode: "host"
+    # networks:
+    #   - ros2_network
+    command: > 
+      bash -c "
+      source /ros2_ws/install/setup.bash &&
+      ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
+      "
+
+  canbus_slave:
+    image: hinpak/ros2:built-1207-maintain
+    container_name: canbus_slave_container
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev:rw
+      - /sys:/sys:rw
+    environment:
+      - DISPLAY=unix:1
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DOMAIN_ID=42
+    network_mode: "host"
+    # networks:
+    #   - ros2_network
+    depends_on:
+      - ros2_socketcan_sender
+      - ros2_socketcan_receiver
+    command: > 
+      bash -c "
+      source /ros2_ws/install/setup.bash &&
+      ros2 launch canbus_slave canbus_slave.launch.py
+      "
+    # && 
+    # colcon build --packages-select ros2_socketcan &&
+    # colcon build --packages-select canbus_slave
+
+  joystick:
+    image: hinpak/ros2:built-1207-maintain
+    container_name: joystick_container
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev:rw
+      - /sys:/sys:rw
+    environment:
+      - DISPLAY=unix:1
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DOMAIN_ID=42
+    network_mode: "host"
+    # networks:
+    #   - ros2_network
+    depends_on:
+      - canbus_slave
+    command: > 
+      bash -c "
+      source /ros2_ws/install/setup.bash && 
+      ros2 launch joystick joystick.launch.py
+      "
+
+  imu_process:
+    image: hinpak/ros2:built-1207-maintain
+    container_name: imu_process_container
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev:rw
+      - /sys:/sys:rw
+    environment:
+      - DISPLAY=unix:1
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DOMAIN_ID=42
+    network_mode: "host"
+    # networks:
+    #   - ros2_network
+    depends_on:
+      - canbus_slave
+    command: > 
+      bash -c "
+      source /ros2_ws/install/setup.bash && 
+      ros2 launch imu_process imu_processor.launch.py
+      "
+    # colcon build --packages-select canbus_slave &&
+    # colcon build --packages-select imu_process &&
+
+  # nav_algo:
+  #   image: hinpak/ros2:built-1207-maintain
+  #   container_name: nav_algo_container
+  #   privileged: true
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - /dev:/dev:rw
+  #     - /sys:/sys:rw
+  #   environment:
+  #     - DISPLAY=unix:1
+  #     - ROS_LOCALHOST_ONLY=0
+  #     - ROS_DOMAIN_ID=42
+  #   network_mode: "host"
+  #   networks:
+  #     - ros2_network
+  #   depends_on:
+  #     - canbus_slave
+  #     - imu_process
+  #   command: > 
+  #     bash -c "
+  #     source /ros2_ws/install/setup.bash && 
+  #     ros2 launch nav_algo nav_algo.launch.py
+  #     "
+    # colcon build --packages-select canbus_slave &&
+    # colcon build --packages-select uart_slave &&
+    # colcon build --packages-select imu_process &&
+    # colcon build --packages-select nav_algo &&
+
   # serial_imu:
-  #   image: hinpak/ros2:built-1104-debug
+  #   image: hinpak/ros2:built-1207-maintain
   #   container_name: serial_imu_container
   #   privileged: true
   #   volumes:
@@ -22,104 +168,9 @@ services:
   #     ros2 launch serial_imu imu_spec_msg.launch.py
   #     "
 
-  # ros2_socketcan:
-  #   image: hinpak/ros2:built-1117-maintain
-  #   container_name: ros2_socketcan_container
-  #   privileged: true
-  #   volumes:
-  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  #     - /dev:/dev:rw
-  #     - /sys:/sys:rw
-  #   environment:
-  #     - DISPLAY=unix:1
-  #     - ROS_LOCALHOST_ONLY=0
-  #     - ROS_DOMAIN_ID=42
-  #   network_mode: "host"
-  #   networks:
-  #     - ros2_network
-  #   command: > 
-  #     bash -c "
-  #     source /ros2_ws/install/setup.bash && 
-  #     colcon build --packages-select ros2_socketcan
-  #     "
-
-  canbus_slave:
-    image: hinpak/ros2:built-1104-debug
-    container_name: canbus_slave_container
-    privileged: true
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev:/dev:rw
-      - /sys:/sys:rw
-    environment:
-      - DISPLAY=unix:1
-      - ROS_LOCALHOST_ONLY=0
-      - ROS_DOMAIN_ID=42
-    network_mode: "host"
-    networks:
-      - ros2_network
-    # depends_on:
-    #   - ros2_socketcan
-    command: > 
-      bash -c "
-      source /ros2_ws/install/setup.bash && 
-      colcon build --packages-select ros2_socketcan &&
-      colcon build --packages-select canbus_slave
-      "
-
-  uart_slave:
-    image: hinpak/ros2:built-1104-debug
-    container_name: uart_slave_container
-    privileged: true
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev:/dev:rw
-      - /sys:/sys:rw
-    environment:
-      - DISPLAY=unix:1
-      - ROS_LOCALHOST_ONLY=0
-      - ROS_DOMAIN_ID=42
-    network_mode: "host"
-    networks:
-      - ros2_network
-    depends_on:
-      - canbus_slave
-    command: > 
-      bash -c "
-      source /ros2_ws/install/setup.bash && 
-      colcon build --packages-select canbus_slave &&
-      colcon build --packages-select uart_slave &&
-      ros2 launch uart_slave uart_slave.launch.py
-      "
-
-  imu_process:
-    image: hinpak/ros2:built-1104-debug
-    container_name: imu_process_container
-    privileged: true
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev:/dev:rw
-      - /sys:/sys:rw
-    environment:
-      - DISPLAY=unix:1
-      - ROS_LOCALHOST_ONLY=0
-      - ROS_DOMAIN_ID=42
-    network_mode: "host"
-    networks:
-      - ros2_network
-    depends_on:
-      - canbus_slave
-    command: > 
-      bash -c "
-      source /ros2_ws/install/setup.bash && 
-      colcon build --packages-select canbus_slave &&
-      colcon build --packages-select imu_process &&
-      ros2 launch imu_process imu_processor.launch.py
-      "
-
-  # nav_algo:
-  #   image: hinpak/ros2:built-1104-debug
-  #   container_name: nav_algo_container
+  # uart_slave:
+  #   image: hinpak/ros2:built-1207-maintain
+  #   container_name: uart_slave_container
   #   privileged: true
   #   volumes:
   #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -134,16 +185,12 @@ services:
   #     - ros2_network
   #   depends_on:
   #     - canbus_slave
-  #     - imu_process
-  #     - uart_slave
   #   command: > 
   #     bash -c "
   #     source /ros2_ws/install/setup.bash && 
   #     colcon build --packages-select canbus_slave &&
   #     colcon build --packages-select uart_slave &&
-  #     colcon build --packages-select imu_process &&
-  #     colcon build --packages-select nav_algo &&
-  #     ros2 launch nav_algo nav_algo.launch.py
+  #     ros2 launch uart_slave uart_slave.launch.py
   #     "
 
 networks:
