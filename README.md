@@ -1,94 +1,120 @@
 ## About
-ROS2 Humble (Ubuntu 22.04) using Docker on Rasberry Pi 5
+This is the ROS2-related source code for a year project related to underwater cleaning robot done by a group of HKUST ISD students. 
 
-## How to Use
-### Set-up
-- Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- Clone the repository
-### Run the Docker (Linux on RasPi5)
-- Open Docker Desktop / Start Docker Engine
-- Change directory to the cloned repo
-- If you don't have a docker builder yet: `docker buildx create --name mybuilder --use`
+- `documentation`: storing (maybe) useful reference
+- `src`: storing active packages
+- `src_dump`: storing unused/outdated packages
+
+>### Environment
+- Rasberry Pi 5 (linux/arm64/v8)
+- ROS2 Humble Docker (Ubuntu 22.04)
+
+## Usage
+>### Auto-start
 ```
-docker buildx build --load --platform linux/arm64 -t <image_name> .
-docker images # to check whether image is successfully built
-xhost +
-docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 --network=host <image_name>
+sudo systemctl <enable/disable> ros2_docker.service
+sudo systemctl <start/stop/restart> ros2_docker.service
+sudo systemctl status ros2_docker.service
 ```
-    > For windows host env: 
-    > `docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it --platform linux/arm64 <image_name>`
-    > To name the container specifically, add `-d --name <container_name>`
+(similar for the can0 auto-start service "systemd-networkd" )
 
-### Hardware Access of Docker
-All RasPi GPIO pins: `--privileged`
+>### Launch the ROS2 nodes manually
+Before launch, make sure  
+1. Current directory is /ros2_ws
+2. `source /ros2_ws/install/setup.bash`
 
-USB ports: `-v /dev:/dev`
-
-If above does not work, try also: `-v /sys:/sys`
-
-To check: `cd /sys/class/gpio` or `cd /dev`
-
-### Docker CLI Quick Reference
-To copy things from docker to host:
-`docker cp <container_id>:/path/to/the/file /path/to/be/saved`
-
-To open a new terminal in the same docker container:
 ```
-docker ps #check container_id
+ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
+ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
+ros2 launch canbus_slave canbus_slave.launch.py
+ros2 launch joystick joystick.launch.py
+ros2 launch imu_process imu_processor.launch.py
+ros2 launch nav_algo nav_algo.launch.py
+```
+
+If the package is not found, the package may not be built yet:
+```
+colcon build --packages-select <package_name>
+```
+Package_name is same as the package's folder name.
+
+>### Directly execute a running container
+```
 docker exec -it <container_id> bash
 ```
 
-To save the container as a new image:
+## Maintanance
+1. Upload the latest code to a docker container
+2. Built all the required packages
+3. Save that container as new docker image
+4. Update `docker-compose.yml`
+5. (if needed) Update `ros2_docker.service` in `/etc/systemd/system`
+
+>### Upload code from host to container
+```
+docker cp ~/guinn-ROS2/src <container_id>:/ros2_ws
+```
+
+>### Save current container as new docker image
 ```
 docker login
-docker ps #check container_id
-docker commit <container_ID> <hub-user>/<repo-name>:<tag>
-docker images #check committed to local or not
+docker commit <container_id> <hub-user>/<repo-name>:<tag>
 ```
-To push image to Docker Hub:
+- Format of the tag: "status-MMDD-purpose"
+    - status: 'base' (core image) or 'built' (packages are already built)
+    - MMDD: date
+    - purpose: 'maintain' (general) or others (e.g. 'debug' or 'test')
+
+- To push image to Docker Hub:
 ```
 docker push <hub-user>/<repo-name>:<tag>
 ```
+Project-related docker image can be found at `hinpak/ros2` Docker Hub repo.
+
+## Monitor & Debug
+>### Monitor the auto-started service:
+```
+docker attach <container_name or container_id>
+```
+
+>### CAN device
+If can0 is not bring up, it is likely because either:  
+- mcp2515 failed to init
+- the can0 interface is down
+
+```
+sudo dmesg | grep -i mcp
+ip -details -statistics link show can0
+sudo ip link set can0 up type can bitrate 100000 loopback off restart-ms 100
+```
+
+To send dummy message: `cansend can0 000#00.00` (or use USB-to-CAN)  
+To show upcoming received message:
+`candump can0`
+
+>### ROS2 topic
+```
+ros2 topic echo <topic> (--field <message_subtype>)
+ros2 topic echo /Imu_euler_angle
+ros2 topic echo /Imu_data_can --field angular_velocity
+ros2 topic echo /Imu_data_can --field linear_acceleration
+```
+
+## Others
+>### Start a container
+```
+docker run -it --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev -v /sys:/sys -e DISPLAY=:0 --network=host <image_name>
+```
+Or if using Windows host:
+```
+docker run -e DISPLAY=host.docker.internal:0.0 --privileged -it --platform linux/arm64 <image_name>
+```
+
+>### Docker CLI Quick Reference
+Check container's ID: `docker ps`  
+List local docker images: `docker images`  
+Exit a docker container: `exit`
+
 If seems stucked, try `sudo systemctl restart docker`
 
-To rename the container for clarity:
-`docker rename <old> <new>`
-
-To check whether the docker is arm64 or amd64: `dpkg --print-architecture`
-
-### Exit the Docker
-Exit by typing `exit` in the docker terminal.
-
-## Support for other packges
-### For Rviz2 and Gazebo
-Below steps needs to be done before running the docker.
-> Linux
-- `xhost local:root` (to enable X11 server)
-> Windows 
-- install [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
-- Set display number as 0 in XLaunch
-
-### For Nav2
-Before running anything using nav2, set key env variables below:
-```
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
-```
-For testing, you can try:
-`ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False`
-
-## Remarks
-[Docker CLI Cheat Sheet](https://docs.docker.com/get-started/docker_cheatsheet.pdf)
-
-Rasberry Pi 5's env:
-- Ubuntu 24.04
-- ROS2 Jazzy
-- host platform = linux/arm64/v8
-
-Reference for windows GUI setting: https://www.youtube.com/watch?v=qWuudNxFGOQ&t=748s
-
-For tb4: https://turtlebot.github.io/turtlebot4-user-manual/tutorials/navigation.html
-
-For RasPi GPIO pins access: https://stackoverflow.com/questions/30059784/docker-access-to-raspberry-pi-gpio-pins
-
-For ROS1-ROS2 migration: https://docs.ros.org/en/humble/How-To-Guides/Migrating-from-ROS1.html
-https://docs.ros.org/en/humble/How-To-Guides/Migrating-from-ROS1/Migrating-CPP-Packages.html
+*[More info available in `documentation` folder.]*

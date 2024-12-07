@@ -17,4 +17,3 @@ typedef uint8_t direction_t;
 #define BACKWARD          0x02
 #define ANTI_CLOCKWISE    0x03
 #define CLOCKWISE         0x04
-

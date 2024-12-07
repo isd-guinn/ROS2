@@ -54,7 +54,3 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh
     # RUN colcon build --symlink-install
     # RUN colcon build --packages-select serial_imu
     # RUN bash -c "source /ros2_ws/install/setup.bash"
-
-# next test items:
-# rviz2 test for imu visualisation -> check if imu's data is really working
-# explore use of tf2 & stuff for getting the position
