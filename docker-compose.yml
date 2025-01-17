@@ -1,7 +1,7 @@
 # A ROS2 network with multiple nodes
 services:
   ros2_socketcan_receiver:
-    image: hinpak/ros2:built-1207-maintain
+    image: hinpak/ros2:built-0117-test
     container_name: socketcan_receiver
     privileged: true
     volumes:
@@ -23,7 +23,7 @@ services:
     # colcon build --packages-select ros2_socketcan &&
 
   ros2_socketcan_sender:
-    image: hinpak/ros2:built-1207-maintain
+    image: hinpak/ros2:built-0117-test
     container_name: socketcan_sender
     privileged: true
     volumes:
@@ -44,7 +44,7 @@ services:
       "
 
   canbus_slave:
-    image: hinpak/ros2:built-1207-maintain
+    image: hinpak/ros2:built-0117-test
     container_name: canbus_slave_container
     privileged: true
     volumes:
@@ -71,7 +71,7 @@ services:
     # colcon build --packages-select canbus_slave
 
   joystick:
-    image: hinpak/ros2:built-1207-maintain
+    image: hinpak/ros2:built-0117-test
     container_name: joystick_container
     privileged: true
     volumes:
@@ -94,7 +94,7 @@ services:
       "
 
   imu_process:
-    image: hinpak/ros2:built-1207-maintain
+    image: hinpak/ros2:built-0117-test
     container_name: imu_process_container
     privileged: true
     volumes:
@@ -119,7 +119,7 @@ services:
     # colcon build --packages-select imu_process &&
 
   # nav_algo:
-  #   image: hinpak/ros2:built-1207-maintain
+  #   image: hinpak/ros2:built-0117-test
   #   container_name: nav_algo_container
   #   privileged: true
   #   volumes:
@@ -147,7 +147,7 @@ services:
     # colcon build --packages-select nav_algo &&
 
   # serial_imu:
-  #   image: hinpak/ros2:built-1207-maintain
+  #   image: hinpak/ros2:built-0117-test
   #   container_name: serial_imu_container
   #   privileged: true
   #   volumes:
@@ -169,7 +169,7 @@ services:
   #     "
 
   # uart_slave:
-  #   image: hinpak/ros2:built-1207-maintain
+  #   image: hinpak/ros2:built-0117-test
   #   container_name: uart_slave_container
   #   privileged: true
   #   volumes:
