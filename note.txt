@@ -1,0 +1,86 @@
+# for documenting the CLI commands for testing & debug
+FROM <BaseImage>
+
+docker cp ~/guinn-ROS2/src 28c16afcaf2a:/ros2_ws
+docker exec -it 28c16afcaf2a bash
+docker commit 28c16afcaf2a hinpak/ros2:built-0117-test
+
+cd /ros2_ws
+source /ros2_ws/install/setup.bash
+colcon build --packages-select ros2_socketcan
+colcon build --packages-select canbus_slave
+colcon build --packages-select uart_slave
+colcon build --packages-select imu_process
+colcon build --packages-select nav_algo
+colcon build --packages-select joystick
+colcon build --packages-select serial_imu
+colcon build --packages-select canbus_test (publishing dummy value)
+
+## to launch:
+ros2 launch ros2_socketcan socket_can_receiver.launch.py interface:=can0 interval_sec:=1.0
+ros2 launch ros2_socketcan socket_can_sender.launch.py interface:=can0 timeout_sec:=1.0
+ros2 launch canbus_slave canbus_slave.launch.py
+ros2 launch uart_slave uart_slave.launch.py
+ros2 launch imu_process imu_processor.launch.py
+ros2 launch nav_algo nav_algo.launch.py
+ros2 launch joystick joystick.launch.py
+ros2 launch serial_imu imu_spec_msg.launch.py
+ros2 run canbus_test publisher (requires manual input, so use ros2 run instead)
+
+ros2 topic echo /Imu_data_can --field angular_velocity
+ros2 topic echo /Imu_data_can --field linear_acceleration
+ros2 topic echo /Imu_euler_angle
+
+imu data need ard 500ms*5 to 500ms*6 to refresh to the right value
+when at rest, 
+fluctuate +-0.01x for linear acc,
++-0.001 for angular velocity
++-0.0002 for orientation 
+
+# may need a step to clear the src folder in the base image
+# WORKDIR /ros2_ws
+# COPY /src /ros2_ws/src
+
+to use GPIO pin instead ("/dev/ttyAMA0"), 
+sudo nano /boot/config.txt
+sudo nano /boot/cmdline.txt
+go to raspi-config and enable serial port -> reboot 
+now config.txt should have dtparam=uart0=on
+and ttyAMA0 should show up in /dev
+-----------------------------------
+To check ip: `hostname -I` (shd be the 10.89.xxx.xxx one)
+To access RasPi5 via SSH:
+At RasPi: `sudo service ssh start`
+At Host: `ssh guinn@<ip_address>
+-----------------------------------
+Path for RasPi5 devices:
+IMU = /dev/ttyUSB0
+UART =  (GPIO) /dev/ttyAMA0
+        (onboard) /dev/ttyAMA10 or /dev/serial0
+JOYSTICK CONTROLLER = /dev/input/js0
+CAN = /sys/bus/spi/devices/spi0.0/net/can0
+check USB devices: lsusb
+-----------------------------------
+To display CAN device details:
+ip -details -statistics link show can0
+To send dummy message:
+cansend can0 000#00.00 (or use PCAN and USB-to-CAN)
+To show upcoming received message:
+candump can0
+
+sudo ip link set can0 up type can bitrate 100000
+sudo ip link set can0 down
+sudo ip link set can0 type can restart
+sudo dmesg | grep -i mcp
+-----------------------------------
+sudo systemctl enable/disable ros2_docker.service
+sudo systemctl start ros2_docker.service
+sudo systemctl stop ros2_docker.service
+sudo systemctl restart ros2_docker.service
+sudo systemctl status ros2_docker.service
+
+# to update the start-up code
+- upload the latest code to docker image & update the docker image
+- update docker-compose.yml
+- (if needed) update /etc/systemd/system/ros2_docker.service in raspi5
+-----------------------------------
